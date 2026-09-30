@@ -156,3 +156,9 @@ npx wrangler pages secret put ADMIN_PASSWORD --project-name photobox-muhada
 Lifecycle rule R2 (hapus 7 hari) hanya untuk prefix `strips/`, jangan seluruh bucket, agar desain tidak ikut terhapus.
 
 **Catatan:** sandi admin saat ini tertulis di `wrangler.toml` (`ADMIN_PASSWORD = "smkbisa"`), jadi repo GitHub sebaiknya **private**. Untuk mengganti sandi, ubah nilai itu lalu push ulang. Jika ingin menyembunyikannya, hapus baris itu dan pakai `wrangler pages secret put ADMIN_PASSWORD`.
+
+## Galeri foto tamu & cetak
+
+- **Galeri:** di `/admin`, bagian "Galeri foto tamu" menampilkan semua strip yang tersimpan (terbaru dulu). Centang foto lalu tekan "Hapus terpilih", atau "Pilih semua". Foto juga otomatis terhapus setelah `RETENTION_DAYS` hari.
+- **Cetak:** layar hasil punya tombol **Cetak**. Bawaan `CONFIG.print.sheet = '2up'` mencetak 2 strip pada kertas foto 4x6 inci (dipotong menjadi dua 2x6). Ubah ke `'single'` untuk kertas 2x6 inci, atau `enabled: false` untuk menyembunyikan tombol.
+- **Cetak tanpa dialog:** jalankan Chrome kiosk dengan `--kiosk-printing` dan atur printer foto sebagai printer bawaan, lalu di pengaturan printer pilih ukuran kertas 4x6 dan skala 100% (tanpa margin).

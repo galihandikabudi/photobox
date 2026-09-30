@@ -4,92 +4,212 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#1B2E6E">
+<meta name="theme-color" content="#0E1745">
 <title>Admin Photobox SMK Muhada</title>
 <link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root { --blue: #1A6FE8; --dark: #1B2E6E; --accent: #F28C00; --cream: #fff8e7; --danger: #ff8a80; }
+  :root {
+    --navy: #0E1745; --dark: #1B2E6E; --blue: #1A6FE8; --accent: #F28C00; --accent-2: #FFB13D; --cream: #fff8e7;
+    --danger: #ff8a80; --ok: #7fe0a0;
+    --card: rgba(255,255,255,.06); --line: rgba(255,255,255,.14); --muted: rgba(255,248,231,.68);
+    --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { min-height: 100vh; background: radial-gradient(circle at 50% 0, rgba(26,111,232,.4), transparent 70%), var(--dark);
-    color: var(--cream); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5; padding: 24px 16px 60px; }
-  main { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
-  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  h1 { font-size: 26px; }
-  h2 { font-size: 18px; color: var(--accent); margin-bottom: 10px; }
+  body { min-height: 100vh; color: var(--cream); font-family: var(--font); line-height: 1.5; font-size: 15px;
+    background: radial-gradient(900px 500px at 85% -10%, rgba(26,111,232,.45), transparent 70%), linear-gradient(180deg, #1B2E6E 0%, #0E1745 100%) fixed; }
   a { color: var(--cream); }
-  .card { background: rgba(255,255,255,.08); border: 1px solid rgba(255,248,231,.18); border-radius: 14px; padding: 16px; }
-  label { display: block; font-size: 14px; margin: 10px 0 4px; }
-  input[type=text], input[type=password], select, input[type=file] {
-    width: 100%; font: inherit; color: var(--cream); background: rgba(0,0,0,.25); border: 1px solid rgba(255,248,231,.3);
-    border-radius: 8px; padding: 10px 12px; }
-  select option { color: #111; }
-  .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; margin: 12px 0 0; }
-  .check input { margin-top: 4px; width: 18px; height: 18px; flex: 0 0 auto; }
-  button { font: inherit; font-weight: 700; border: 0; cursor: pointer; border-radius: 999px; padding: 10px 20px;
-    background: var(--accent); color: var(--dark); }
-  button.ghost { background: transparent; color: var(--cream); border: 1px solid rgba(255,248,231,.5); }
-  button.danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
-  button:disabled { opacity: .5; cursor: default; }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
-  .hint { font-size: 13px; opacity: .8; margin-top: 6px; }
-  .err { color: var(--danger); font-size: 14px; margin-top: 10px; min-height: 1.2em; }
-  .ok { color: #9be7a6; font-size: 14px; margin-top: 10px; min-height: 1.2em; }
-  .warn { color: #ffd27a; font-size: 13px; margin-top: 6px; }
-  #list { display: flex; flex-direction: column; gap: 14px; }
-  .item { display: grid; grid-template-columns: 96px 1fr; gap: 14px; padding: 12px; border-radius: 12px; background: rgba(0,0,0,.18); }
-  .thumb { width: 96px; height: 288px; border-radius: 6px; overflow: hidden;
-    background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 16px 16px; }
-  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .item .fields { display: flex; flex-direction: column; gap: 4px; }
-  .empty { opacity: .75; font-size: 14px; }
   [hidden] { display: none !important; }
+
+  /* bilah atas */
+  .topbar { position: sticky; top: 0; z-index: 5; background: rgba(14,23,69,.88); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .topbar-in { max-width: 1040px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 14px; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+  .brand img { width: 40px; height: 40px; border-radius: 11px; }
+  .brand b { display: block; font-size: 16px; font-weight: 800; letter-spacing: .2px; }
+  .brand span { display: block; font-size: 11px; letter-spacing: 2px; color: var(--accent-2); font-weight: 700; }
+  .toplinks { display: flex; gap: 8px; align-items: center; }
+
+  main { max-width: 1040px; margin: 0 auto; padding: 24px 20px 70px; display: flex; flex-direction: column; gap: 20px; }
+  h2 { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+  .sub { color: var(--muted); font-size: 13.5px; margin-bottom: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; }
+
+  /* tombol */
+  button, .btn { font: inherit; font-weight: 700; font-size: 14px; border: 0; cursor: pointer; border-radius: 10px; padding: 10px 18px;
+    background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: var(--navy); text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    transition: transform .06s, opacity .2s, background .2s; }
+  button:active { transform: scale(.97); }
+  button:disabled { opacity: .45; cursor: default; }
+  button.ghost, .btn.ghost { background: rgba(255,255,255,.06); color: var(--cream); border: 1px solid var(--line); }
+  button.ghost:hover { background: rgba(255,255,255,.12); }
+  button.danger { background: rgba(255,138,128,.08); color: var(--danger); border: 1px solid rgba(255,138,128,.5); }
+  button.danger:hover:not(:disabled) { background: rgba(255,138,128,.18); }
+  button.sm { padding: 7px 12px; font-size: 13px; }
+
+  /* formulir */
+  label { display: block; font-size: 13px; font-weight: 700; margin: 14px 0 6px; color: var(--cream); }
+  input[type=text], input[type=password], select, input[type=file] {
+    width: 100%; font: inherit; color: var(--cream); background: rgba(0,0,0,.28); border: 1px solid var(--line);
+    border-radius: 10px; padding: 11px 13px; outline: none; transition: border-color .15s, box-shadow .15s; }
+  input:focus, select:focus { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(242,140,0,.25); }
+  input::file-selector-button { font: inherit; font-weight: 700; margin-right: 12px; border: 0; border-radius: 8px; padding: 6px 12px; background: rgba(255,255,255,.16); color: var(--cream); cursor: pointer; }
+  select option { color: #111; }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; font-weight: 500; margin: 14px 0 0; cursor: pointer; }
+  .check input { margin-top: 3px; width: 18px; height: 18px; flex: 0 0 auto; accent-color: var(--accent); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+  .hint { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+  .err { color: var(--danger); font-size: 13.5px; margin-top: 10px; min-height: 1.2em; }
+  .ok { color: var(--ok); font-size: 13.5px; margin-top: 10px; min-height: 1.2em; }
+  .warn { color: #ffd27a; font-size: 12.5px; margin-top: 6px; }
+  .err:empty, .ok:empty { display: none; }
+
+  /* masuk */
+  .login-wrap { max-width: 420px; margin: 60px auto 0; width: 100%; }
+  .login-wrap .card { padding: 30px; }
+  .login-wrap h2 { font-size: 22px; }
+  .lock { width: 52px; height: 52px; border-radius: 14px; background: rgba(242,140,0,.16); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+  .lock svg { width: 26px; height: 26px; fill: none; stroke: var(--accent-2); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ringkasan */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; }
+  .stat small { display: block; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+  .stat strong { display: block; font-size: 28px; font-weight: 800; margin-top: 2px; }
+
+  /* tab */
+  .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tab { background: none; color: var(--muted); border-radius: 10px 10px 0 0; padding: 12px 18px; font-size: 14.5px; border-bottom: 3px solid transparent; box-shadow: none; white-space: nowrap; }
+  .tab:hover { color: var(--cream); }
+  .tab.on { color: #fff; border-bottom-color: var(--accent); background: rgba(255,255,255,.05); }
+  .pane { display: none; flex-direction: column; gap: 20px; }
+  .pane.on { display: flex; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+  /* daftar desain */
+  #list { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .item { display: grid; grid-template-columns: 96px 1fr; gap: 16px; padding: 14px; border-radius: 14px; background: rgba(0,0,0,.2); border: 1px solid var(--line); }
+  .thumb { width: 96px; height: 288px; border-radius: 8px; overflow: hidden;
+    background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 16px 16px; box-shadow: 0 6px 16px rgba(0,0,0,.35); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .item .fields { display: flex; flex-direction: column; gap: 8px; }
+  .item .fields .check { margin: 2px 0; }
+  .item .row { margin-top: 4px; }
+  .empty { color: var(--muted); font-size: 14px; padding: 18px; text-align: center; border: 1px dashed var(--line); border-radius: 12px; }
+
+  /* galeri */
+  .toolbar-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+  #gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 14px; margin-top: 14px; }
+  .g { position: relative; border-radius: 12px; overflow: hidden; background: rgba(0,0,0,.25); border: 2px solid transparent; transition: border-color .15s, transform .15s; }
+  .g:hover { transform: translateY(-2px); }
+  .g.sel { border-color: var(--accent); }
+  .g img { width: 100%; aspect-ratio: 1 / 3; object-fit: cover; display: block; background: #fff; }
+  .g input { position: absolute; top: 8px; left: 8px; width: 24px; height: 24px; accent-color: var(--accent); cursor: pointer; }
+  .g .cap { font-size: 11.5px; padding: 6px 8px; color: var(--muted); display: flex; justify-content: space-between; gap: 4px; }
+  .g.exp img { opacity: .4; }
+
+  @media (max-width: 760px) {
+    .split { grid-template-columns: 1fr; }
+    .stats { gap: 8px; }
+    .stat { padding: 12px; }
+    .stat strong { font-size: 22px; }
+    .brand span { display: none; }
+    main { padding: 18px 14px 60px; }
+    .card { padding: 18px; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <h1>Admin Photobox</h1>
-    <span><a href="/" target="_blank" rel="noopener">Buka kiosk</a> <span id="logoutWrap" hidden> | <a href="#" id="btnLogout">Keluar</a></span></span>
-  </header>
+<header class="topbar"><div class="topbar-in">
+  <div class="brand"><img src="icon-192.png" alt=""><div><b>Photobox Admin</b><span>SMK MUHAMMADIYAH TODANAN</span></div></div>
+  <div class="toplinks">
+    <a class="btn ghost sm" href="/" target="_blank" rel="noopener">Buka kiosk</a>
+    <span id="logoutWrap" hidden><button id="btnLogout" class="ghost sm" type="button">Keluar</button></span>
+  </div>
+</div></header>
 
+<main>
+  <div class="login-wrap" id="loginWrap">
   <section id="login" class="card">
-    <h2>Masuk</h2>
-    <label for="pw">Kata sandi admin</label>
-    <input id="pw" type="password" autocomplete="current-password">
-    <div class="row"><button id="btnLogin">Masuk</button></div>
+    <div class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+    <h2>Masuk ke admin</h2>
+    <p class="sub" style="margin-bottom:0">Kelola desain strip dan foto tamu Photobox.</p>
+    <label for="pw">Kata sandi</label>
+    <input id="pw" type="password" autocomplete="current-password" placeholder="Masukkan kata sandi admin">
+    <div class="row"><button id="btnLogin" type="button">Masuk</button></div>
     <p id="loginMsg" class="err"></p>
   </section>
+  </div>
 
-  <div id="panel" hidden>
-    <section class="card">
-      <h2>Unggah desain baru</h2>
-      <label for="file">Gambar (PNG, JPG, atau WebP, maks. 8 MB)</label>
-      <input id="file" type="file" accept="image/png,image/jpeg,image/webp">
-      <p id="dims" class="hint"></p>
-      <label for="name">Nama desain</label>
-      <input id="name" type="text" maxlength="40" placeholder="mis. Hari Pendidikan">
-      <label for="type">Jenis</label>
-      <select id="type">
-        <option value="latar">Latar: gambar di belakang foto (seluruh strip)</option>
-        <option value="frame">Frame: gambar di atas foto, dengan jendela transparan atau magenta #FF00FF</option>
-      </select>
-      <label class="check"><input id="showText" type="checkbox"> Tampilkan teks judul dan footer di atas gambar (matikan agar strip sepenuhnya dari gambar)</label>
-      <p class="hint">Ukuran ideal 1200 x 3600 px (rasio 1:3). Empat foto akan ditempatkan di posisi yang sama seperti pada panduan frame di README.</p>
-      <div class="row"><button id="btnUpload">Unggah</button></div>
-      <p id="uploadMsg" class="err"></p>
-    </section>
+  <div id="panel" hidden style="display:none">
+    <div class="stats" style="margin-bottom:20px">
+      <div class="stat"><small>Desain</small><strong id="statDesign">-</strong></div>
+      <div class="stat"><small>Foto tamu</small><strong id="statPhotos">-</strong></div>
+      <div class="stat"><small>Penyimpanan</small><strong id="statSize">-</strong></div>
+    </div>
 
-    <section class="card">
-      <h2>Pengaturan kiosk</h2>
-      <label class="check"><input id="hideBuiltin" type="checkbox"> Sembunyikan frame bawaan (hanya desain yang diunggah yang tampil, jika ada minimal satu)</label>
-      <p id="settingsMsg" class="ok"></p>
-    </section>
+    <nav class="tabs" role="tablist">
+      <button class="tab on" data-tab="desain" type="button">Desain strip</button>
+      <button class="tab" data-tab="galeri" type="button">Galeri foto</button>
+      <button class="tab" data-tab="setelan" type="button">Pengaturan</button>
+    </nav>
 
-    <section class="card">
-      <h2>Desain tersimpan</h2>
-      <div id="list"><p class="empty">Memuat...</p></div>
-      <p id="listMsg" class="err"></p>
-    </section>
+    <div class="pane on" id="pane-desain" style="margin-top:20px">
+      <div class="split">
+        <section class="card">
+          <h2>Unggah desain baru</h2>
+          <p class="sub">Gambar desain akan muncul sebagai pilihan di kiosk.</p>
+          <label for="file">Gambar (PNG, JPG, atau WebP, maks. 8 MB)</label>
+          <input id="file" type="file" accept="image/png,image/jpeg,image/webp">
+          <p id="dims" class="hint"></p>
+          <label for="name">Nama desain</label>
+          <input id="name" type="text" maxlength="40" placeholder="mis. Hari Pendidikan">
+          <label for="type">Jenis</label>
+          <select id="type">
+            <option value="latar">Latar: gambar di belakang foto (seluruh strip)</option>
+            <option value="frame">Frame: gambar di atas foto, jendela transparan atau magenta #FF00FF</option>
+          </select>
+          <label class="check"><input id="showText" type="checkbox"> Tampilkan teks judul dan footer di atas gambar (matikan agar strip sepenuhnya dari gambar)</label>
+          <p class="hint">Ukuran ideal 1200 x 3600 px (rasio 1:3). Posisi empat foto mengikuti panduan frame di README.</p>
+          <div class="row"><button id="btnUpload" type="button">Unggah desain</button></div>
+          <p id="uploadMsg" class="err"></p>
+        </section>
+
+        <section class="card">
+          <h2>Desain tersimpan</h2>
+          <p class="sub">Perubahan tersimpan otomatis.</p>
+          <div id="list"><p class="empty">Memuat...</p></div>
+          <p id="listMsg" class="err"></p>
+        </section>
+      </div>
+    </div>
+
+    <div class="pane" id="pane-galeri" style="margin-top:20px">
+      <section class="card">
+        <h2>Galeri foto tamu</h2>
+        <p id="galInfo" class="sub" style="margin-bottom:0">Memuat...</p>
+        <div class="toolbar-row">
+          <button id="galAll" class="ghost sm" type="button">Pilih semua</button>
+          <button id="galNone" class="ghost sm" type="button">Batal pilih</button>
+          <button id="galReload" class="ghost sm" type="button">Muat ulang</button>
+          <button id="galDel" class="danger sm" type="button" disabled style="margin-left:auto">Hapus terpilih</button>
+        </div>
+        <p id="galMsg" class="err"></p>
+        <div id="gal"></div>
+        <div class="row" style="justify-content:center"><button id="galMore" class="ghost" type="button" hidden>Tampilkan lebih banyak</button></div>
+      </section>
+    </div>
+
+    <div class="pane" id="pane-setelan" style="margin-top:20px">
+      <section class="card">
+        <h2>Pengaturan kiosk</h2>
+        <p class="sub">Berlaku saat kiosk kembali ke layar awal.</p>
+        <label class="check"><input id="hideBuiltin" type="checkbox"> Sembunyikan frame bawaan (hanya desain yang diunggah yang tampil, jika ada minimal satu)</label>
+        <p id="settingsMsg" class="ok"></p>
+      </section>
+    </div>
   </div>
 </main>
 
@@ -115,8 +235,9 @@
   }
 
   function setLoggedIn(on) {
-    $('login').hidden = on;
+    $('loginWrap').hidden = on;
     $('panel').hidden = !on;
+    $('panel').style.display = on ? 'block' : 'none';
     $('logoutWrap').hidden = !on;
   }
 
@@ -128,6 +249,7 @@
       try { sessionStorage.setItem('pb_admin', pw); } catch (e) { /* abaikan */ }
       setLoggedIn(true);
       await loadList();
+      loadGallery();
     } catch (e) {
       pw = '';
       try { sessionStorage.removeItem('pb_admin'); } catch (e2) { /* abaikan */ }
@@ -141,7 +263,7 @@
   $('btnLogin').addEventListener('click', () => login($('pw').value));
   $('pw').addEventListener('keydown', (e) => { if (e.key === 'Enter') login($('pw').value); });
   $('btnLogout').addEventListener('click', (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     pw = '';
     try { sessionStorage.removeItem('pb_admin'); } catch (e2) { /* abaikan */ }
     $('pw').value = '';
@@ -208,7 +330,7 @@
     chk.addEventListener('change', () => save({ showText: chk.checked }));
 
     const del = document.createElement('button');
-    del.className = 'danger';
+    del.className = 'danger sm';
     del.textContent = 'Hapus';
     del.addEventListener('click', async () => {
       if (!confirm('Hapus desain "' + it.name + '"?')) return;
@@ -245,6 +367,7 @@
       } else {
         j.items.forEach((it) => list.appendChild(itemRow(it)));
       }
+      $('statDesign').textContent = j.items.length;
       $('hideBuiltin').checked = !!(j.settings && j.settings.hideBuiltin);
     } catch (e) {
       $('listMsg').textContent = 'Gagal memuat daftar desain.';
@@ -308,6 +431,108 @@
     }
   });
 
+  /* ---------- galeri foto tamu ---------- */
+  const PAGE = 48;
+  let galItems = [];
+  let galTotal = 0;
+  const galSel = new Set();
+  const fmtSize = (b) => (b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB');
+  const fmtDate = (t) => new Date(t).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+  function updateGalButtons() {
+    $('galDel').disabled = galSel.size === 0;
+    $('galDel').textContent = galSel.size ? 'Hapus terpilih (' + galSel.size + ')' : 'Hapus terpilih';
+    $('galMore').hidden = galItems.length >= galTotal;
+  }
+
+  function addTiles(items) {
+    const box = $('gal');
+    items.forEach((it) => {
+      const d = document.createElement('div');
+      d.className = 'g' + (it.expired ? ' exp' : '');
+      const a = document.createElement('a');
+      a.href = '/api/photo/' + it.id;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.alt = 'Foto ' + it.id;
+      img.src = '/api/photo/' + it.id;
+      a.appendChild(img);
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = galSel.has(it.id);
+      d.classList.toggle('sel', cb.checked);
+      cb.addEventListener('change', () => {
+        if (cb.checked) galSel.add(it.id); else galSel.delete(it.id);
+        d.classList.toggle('sel', cb.checked);
+        updateGalButtons();
+      });
+      d.dataset.id = it.id;
+      const cap = document.createElement('div');
+      cap.className = 'cap';
+      cap.innerHTML = '<span></span><span></span>';
+      cap.children[0].textContent = fmtDate(it.uploaded) + (it.expired ? ' (kedaluwarsa)' : '');
+      cap.children[1].textContent = fmtSize(it.size);
+      d.appendChild(a);
+      d.appendChild(cb);
+      d.appendChild(cap);
+      box.appendChild(d);
+    });
+  }
+
+  async function loadGallery(more) {
+    $('galMsg').textContent = '';
+    if (!more) { galItems = []; galSel.clear(); $('gal').innerHTML = ''; }
+    try {
+      const r = await api('/api/admin/strips?offset=' + galItems.length + '&limit=' + PAGE);
+      galTotal = r.total;
+      $('statPhotos').textContent = r.total;
+      $('statSize').textContent = fmtSize(r.totalBytes);
+      galItems = galItems.concat(r.items);
+      addTiles(r.items);
+      $('galInfo').textContent = r.total
+        ? r.total + ' foto, total ' + fmtSize(r.totalBytes) + '. Foto otomatis dihapus setelah ' + r.retentionDays + ' hari (yang pudar sudah lewat batas).'
+        : 'Belum ada foto tamu.';
+      updateGalButtons();
+    } catch (e) {
+      $('galMsg').textContent = e.message;
+    }
+  }
+
+  $('galReload').addEventListener('click', () => loadGallery());
+  $('galMore').addEventListener('click', () => loadGallery(true));
+  $('galAll').addEventListener('click', () => {
+    galItems.forEach((it) => galSel.add(it.id));
+    document.querySelectorAll('#gal .g').forEach((d) => { d.classList.add('sel'); d.querySelector('input').checked = true; });
+    updateGalButtons();
+  });
+  $('galNone').addEventListener('click', () => {
+    galSel.clear();
+    document.querySelectorAll('#gal .g').forEach((d) => { d.classList.remove('sel'); d.querySelector('input').checked = false; });
+    updateGalButtons();
+  });
+  $('galDel').addEventListener('click', async () => {
+    const ids = Array.from(galSel);
+    if (!ids.length) return;
+    if (!confirm('Hapus ' + ids.length + ' foto secara permanen? Tindakan ini tidak bisa dibatalkan.')) return;
+    $('galDel').disabled = true;
+    $('galMsg').textContent = '';
+    try {
+      for (let i = 0; i < ids.length; i += 500) {
+        await api('/api/admin/strips-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: ids.slice(i, i + 500) })
+        });
+      }
+      await loadGallery();
+    } catch (e) {
+      $('galMsg').textContent = e.message;
+      updateGalButtons();
+    }
+  });
+
   /* ---------- pengaturan ---------- */
   $('hideBuiltin').addEventListener('change', async () => {
     const m = $('settingsMsg');
@@ -324,6 +549,13 @@
       m.className = 'err';
       m.textContent = e.message;
     }
+  });
+
+  document.querySelectorAll('.tab').forEach((t) => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x === t));
+      document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('on', p.id === 'pane-' + t.dataset.tab));
+    });
   });
 
   if (pw) login(pw);
