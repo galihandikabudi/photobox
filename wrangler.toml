@@ -9,3 +9,4 @@ bucket_name = "photobox-muhada"
 
 [vars]
 RETENTION_DAYS = "7"
+ADMIN_PASSWORD = "smkbisa"
