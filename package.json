@@ -1,0 +1,10 @@
+{
+  "name": "photobox-muhada",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Photobox SMK Muhada: strip foto berframe dengan QR unduh (Cloudflare Pages + R2)",
+  "scripts": {
+    "dev": "npx wrangler pages dev public",
+    "deploy": "npx wrangler pages deploy public --project-name photobox-muhada"
+  }
+}

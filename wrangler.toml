@@ -1,0 +1,11 @@
+name = "photobox-muhada"
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "public"
+
+# Penyimpanan foto strip (buat bucket-nya dulu: npx wrangler r2 bucket create photobox-muhada)
+[[r2_buckets]]
+binding = "PHOTOS"
+bucket_name = "photobox-muhada"
+
+[vars]
+RETENTION_DAYS = "7"
