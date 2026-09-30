@@ -12,11 +12,17 @@ Photobox berbasis web untuk acara sekolah: kamera depan, 4 foto otomatis, strip 
 ## Rasio tetap di semua perangkat
 
 - **Tampilan**: seluruh aplikasi digambar pada kanvas tetap **16:9 (1920 x 1080)** lalu diskalakan seragam
-  ke layar apa pun. Di layar dengan rasio lain (misalnya iPad 4:3) muncul pita hijau di tepi, isinya tidak
+  ke layar apa pun. Di layar dengan rasio lain (misalnya iPad 4:3) muncul pita biru tua di tepi, isinya tidak
   berubah bentuk. Jika perangkat berdiri tegak (potret), muncul pesan agar diputar ke mode lanskap.
 - **Foto**: apa pun rasio kameranya (4:3, 16:9, dll.), bagian tengah selalu dipotong ke rasio jendela foto
   **3:2 (540:355)**. Yang terlihat di preview sama persis dengan hasil jepretan.
 - **Hasil**: strip selalu 1200 x 3600 px (1:3).
+
+## Warna
+
+Palet mengikuti brand Muhada Berdaya: **Biru Tua `#1B2E6E`** (warna dasar), **Biru Terang `#1A6FE8`** (sorot latar),
+dan **Oranye `#F28C00`** (aksen tombol, garis, judul). Nilainya ada di bagian `:root` CSS dalam `public/index.html`
+(dan di `functions/d/[id].js` untuk halaman unduh).
 
 ## Isi proyek
 
@@ -100,12 +106,12 @@ Ukuran kanvas: **1200 x 3600 px** (rasio 1:3). Ada 4 jendela foto, masing-masing
 Dua cara membuat jendelanya:
 
 - **Tanpa Canva Pro (disarankan):** unggah `template/frame-template.png` ke Canva sebagai gambar latar
-  (kotak magenta = jendela foto). Desain di area hijau, tapi **jangan menutupi kotak magenta**.
+  (kotak magenta = jendela foto). Desain di area biru, tapi **jangan menutupi kotak magenta**.
   Ekspor PNG biasa. Aplikasi otomatis mengubah warna magenta murni `#FF00FF` menjadi transparan.
 - **Dengan Canva Pro:** ekspor PNG dengan opsi "Latar belakang transparan", area jendela dibiarkan kosong.
 
 Simpan hasilnya sebagai `public/frame.png` lalu deploy ulang. Jika `frame.png` tidak ada,
-aplikasi memakai frame contoh bawaan (hijau-emas, teks SMK Muhammadiyah Todanan).
+aplikasi memakai frame contoh bawaan (biru tua dengan aksen oranye, teks SMK Muhammadiyah Todanan).
 
 Teks pada frame bawaan bisa diubah di bagian `CONFIG.brand` dalam `public/index.html`.
 

@@ -2,17 +2,17 @@
 const ID_RE = /^[a-hj-km-np-z2-9]{10}$/;
 
 const STYLE = `
-  :root{--green:#0b6b44;--dark:#073d27;--gold:#f2b632;--cream:#fff8e7}
+  :root{--blue:#1A6FE8;--dark:#1B2E6E;--accent:#F28C00;--cream:#fff8e7}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{min-height:100vh;background:radial-gradient(circle at 50% 0,var(--green),var(--dark) 75%);color:var(--cream);
+  body{min-height:100vh;background:radial-gradient(circle at 50% 0,rgba(26,111,232,.4),transparent 75%),var(--dark);color:var(--cream);
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;
     gap:16px;padding:24px 16px 40px;text-align:center}
-  .badge{color:var(--gold);font-weight:700;letter-spacing:2px;font-size:13px}
+  .badge{color:var(--accent);font-weight:700;letter-spacing:2px;font-size:13px}
   h1{font-size:26px}
   img{max-width:min(320px,80vw);width:100%;height:auto;background:#fff;border-radius:6px;box-shadow:0 12px 40px rgba(0,0,0,.45)}
   .btns{display:flex;flex-direction:column;gap:12px;width:min(320px,80vw)}
   a.btn,button{display:block;font:inherit;font-weight:800;font-size:18px;padding:16px;border-radius:999px;border:0;
-    background:var(--gold);color:var(--dark);text-decoration:none;cursor:pointer}
+    background:var(--accent);color:var(--dark);text-decoration:none;cursor:pointer}
   button.ghost{background:transparent;color:var(--cream);border:2px solid rgba(255,248,231,.55)}
   p.note{font-size:13px;opacity:.75;max-width:320px;line-height:1.45}
   [hidden]{display:none!important}
