@@ -97,14 +97,21 @@
   button:disabled { opacity: .5; }
   button.big { font-size: 48px; padding: 30px 100px; box-shadow: 0 12px 34px rgba(0,0,0,.35); }
   button.ghost { background: transparent; color: var(--cream); border: 3px solid rgba(255,248,231,.55); }
-  .corner { position: absolute; top: 24px; right: 24px; font-size: 20px; padding: 12px 22px; opacity: .55; }
+  .toolbar { position: absolute; top: 24px; right: 24px; display: flex; gap: 14px; z-index: 3; }
+  .icon-btn { width: 68px; height: 68px; padding: 0; display: flex; align-items: center; justify-content: center; opacity: .8; }
+  .icon-btn svg { width: 36px; height: 36px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-btn.on { opacity: 1; background: rgba(255,248,231,.16); border-color: var(--accent); }
 
-  /* ---------- start: pilihan desain ---------- */
-  .s-start-hasPicker h1 { font-size: 88px; }
-  .s-start-hasPicker .sub { font-size: 26px; }
-  .s-start-hasPicker { gap: 18px; }
-  .pick-label { font-size: 24px; font-weight: 700; opacity: .92; margin-bottom: 8px; }
-  .picker { display: flex; gap: 16px; justify-content: center; max-width: 1560px; overflow-x: auto; padding: 6px 12px; }
+  /* ---------- start: pilihan desain (panel di pojok kanan atas) ---------- */
+  #pickerWrap {
+    position: absolute; top: 108px; right: 24px; z-index: 3;
+    background: rgba(16,26,71,.96); border: 3px solid rgba(255,248,231,.35);
+    border-radius: 22px; padding: 18px 18px 12px; box-shadow: 0 18px 44px rgba(0,0,0,.45);
+    max-width: 1100px;
+  }
+  #pickerWrap[hidden] { display: none; }
+  .pick-label { font-size: 24px; font-weight: 700; opacity: .92; margin-bottom: 8px; text-align: center; }
+  .picker { display: flex; gap: 16px; justify-content: center; max-width: 1050px; overflow-x: auto; padding: 6px 12px; }
   .dz {
     flex: 0 0 auto;
     width: 140px;
@@ -126,7 +133,14 @@
   .dz span { max-width: 124px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* ---------- shoot ---------- */
-  #s-shoot { justify-content: flex-start; padding-top: 36px; gap: 20px; }
+  #s-shoot { flex-direction: row; justify-content: center; align-items: center; gap: 80px; padding: 24px 40px; }
+  #s-shoot.active { display: flex; }
+  .shoot-main { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  #stripPrev {
+    width: 344px; height: 1032px; flex: none;
+    background: #fff; border-radius: 6px;
+    box-shadow: 0 16px 50px rgba(0,0,0,.5);
+  }
   #status { font-size: 46px; font-weight: 800; color: var(--cream); height: 56px; line-height: 56px; }
   #btnCancel { position: absolute; top: 24px; left: 24px; font-size: 26px; padding: 16px 34px; }
   #confirm {
@@ -167,17 +181,6 @@
   @keyframes pop { 0% { transform: scale(1.7); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(.85); opacity: .85; } }
   #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity .35s ease-out; }
   #flash.on { opacity: .95; transition: none; }
-  .thumbs { display: flex; gap: 12px; width: 1080px; }
-  .thumb {
-    flex: 1 1 0;
-    aspect-ratio: 540 / 355;
-    border: 3px dashed rgba(255,248,231,.4);
-    border-radius: 8px;
-    overflow: hidden;
-    background: rgba(0,0,0,.25);
-  }
-  .thumb.filled { border-style: solid; border-color: var(--accent); }
-  .thumb canvas { width: 100%; height: 100%; display: block; object-fit: cover; }
 
   /* ---------- process ---------- */
   .spinner { width: 80px; height: 80px; border-radius: 50%; border: 8px solid rgba(255,248,231,.25); border-top-color: var(--accent); animation: spin 1s linear infinite; }
@@ -222,7 +225,14 @@
 <div id="stage">
 
 <section id="s-start" class="screen active">
-  <button id="btnFs" class="corner ghost">Layar penuh</button>
+  <div class="toolbar">
+    <button id="btnDesign" class="icon-btn ghost" type="button" title="Pilih desain strip" aria-label="Pilih desain strip" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="1.5"/><rect x="9.5" y="5" width="5" height="3"/><rect x="9.5" y="9.5" width="5" height="3"/><rect x="9.5" y="14" width="5" height="3"/></svg>
+    </button>
+    <button id="btnFs" class="icon-btn ghost" type="button" title="Layar penuh" aria-label="Layar penuh">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+  </div>
   <div class="badge">SMK MUHAMMADIYAH TODANAN</div>
   <h1>PHOTOBOX</h1>
   <p class="sub">Ambil 4 foto seru, langsung jadi strip foto berframe.<br>Scan QR untuk mengunduh hasilnya ke HP kamu.</p>
@@ -238,13 +248,15 @@
 
 <section id="s-shoot" class="screen">
   <button id="btnCancel" class="ghost">Batalkan</button>
-  <div id="status"></div>
-  <div class="cam">
-    <video id="video" autoplay playsinline muted></video>
-    <div id="count"></div>
-    <div id="flash"></div>
+  <div class="shoot-main">
+    <div id="status"></div>
+    <div class="cam">
+      <video id="video" autoplay playsinline muted></video>
+      <div id="count"></div>
+      <div id="flash"></div>
+    </div>
   </div>
-  <div class="thumbs" id="thumbs"></div>
+  <canvas id="stripPrev" width="360" height="1080"></canvas>
   <div id="confirm">
     <h2>Batalkan sesi foto?</h2>
     <p>Foto yang sudah diambil akan dihapus.</p>
@@ -419,14 +431,12 @@
   /* ====================== PENGAMBILAN FOTO ====================== */
   // Apa pun rasio kameranya (4:3, 16:9, 9:16), bagian tengah dipotong ke rasio jendela foto (540:355),
   // sama persis dengan yang terlihat di preview (object-fit: cover).
-  function captureFrame() {
-    const sw = CONFIG.slot.w * S;
-    const sh = CONFIG.slot.h * S;
+  function drawVideoTo(c) {
+    const sw = c.width;
+    const sh = c.height;
     const vw = video.videoWidth;
     const vh = video.videoHeight;
-    const c = document.createElement('canvas');
-    c.width = sw;
-    c.height = sh;
+    if (!vw || !vh) return false;
     const ctx = c.getContext('2d');
     const target = sw / sh;
     let cw = vw;
@@ -438,25 +448,58 @@
     if (CONFIG.mirror) { ctx.translate(sw, 0); ctx.scale(-1, 1); }
     ctx.drawImage(video, cx, cy, cw, ch, 0, 0, sw, sh);
     ctx.restore();
+    return true;
+  }
+
+  function captureFrame() {
+    const c = document.createElement('canvas');
+    c.width = CONFIG.slot.w * S;
+    c.height = CONFIG.slot.h * S;
+    drawVideoTo(c);
     return c;
   }
 
-  function renderThumbs() {
-    const box = $('thumbs');
-    box.innerHTML = '';
-    for (let i = 0; i < CONFIG.shots; i++) {
-      const d = document.createElement('div');
-      d.className = 'thumb';
-      if (photos[i]) {
-        d.classList.add('filled');
-        const c = document.createElement('canvas');
-        c.width = 270;
-        c.height = Math.round(270 * CONFIG.slot.h / CONFIG.slot.w);
-        c.getContext('2d').drawImage(photos[i], 0, 0, c.width, c.height);
-        d.appendChild(c);
-      }
-      box.appendChild(d);
+  // Pratinjau strip di layar foto: desain terpilih + foto yang sudah diambil + tampilan kamera langsung di posisi berikutnya.
+  const PREV_K = 0.6;
+  let prevLayers = null;
+  let prevText = false;
+  let prevRun = 0;
+  const liveCanvas = document.createElement('canvas');
+  liveCanvas.width = 270;
+  liveCanvas.height = Math.round(270 * CONFIG.slot.h / CONFIG.slot.w);
+
+  async function preparePreview() {
+    const W = Math.round(CONFIG.strip.w * PREV_K);
+    const H = Math.round(CONFIG.strip.h * PREV_K);
+    let d = selected;
+    try {
+      prevLayers = await layersFor(d, W, H);
+    } catch (e) {
+      d = BUILTIN;
+      prevLayers = await layersFor(d, W, H);
     }
+    prevText = textOn(d);
+  }
+
+  function renderThumbs() { drawPreview(); }
+
+  function drawPreview() {
+    const cv = $('stripPrev');
+    if (!prevLayers) return;
+    const list = photos.slice();
+    if (photos.length < CONFIG.shots && drawVideoTo(liveCanvas)) list[photos.length] = liveCanvas;
+    drawStrip(cv.getContext('2d'), PREV_K, list, prevLayers, prevText);
+  }
+
+  function startPreviewLoop() {
+    const my = ++prevRun;
+    let last = 0;
+    const tick = (t) => {
+      if (my !== prevRun || !$('s-shoot').classList.contains('active')) return;
+      if (t - last > 60) { last = t; drawPreview(); }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
 
   // Menunggu ms milidetik; berhenti saat jeda (dialog batal terbuka) dan melempar Cancelled bila dibatalkan.
@@ -703,12 +746,19 @@
     }
   }
 
+  function togglePicker(open) {
+    const w = $('pickerWrap');
+    const show = typeof open === 'boolean' ? open : w.hidden;
+    w.hidden = !show;
+    $('btnDesign').classList.toggle('on', show);
+  }
+
   function renderPicker() {
     const box = $('picker');
     box.innerHTML = '';
     const many = designs.length > 1;
-    $('pickerWrap').hidden = !many;
-    $('s-start').classList.toggle('s-start-hasPicker', many);
+    $('btnDesign').hidden = !many;
+    if (!many) togglePicker(false);
     if (!many) return;
     designs.forEach((d) => {
       const b = document.createElement('button');
@@ -726,6 +776,7 @@
         if (d.broken) return;
         selected = d;
         markSelected();
+        togglePicker(false);
       });
       box.appendChild(b);
       drawThumb(d, c, b);
@@ -883,9 +934,12 @@
     try {
       if (!(await initCamera())) { busy = false; show('start'); return; }
       photos = [];
-      renderThumbs();
+      prevLayers = null;
+      await preparePreview();
+      if (sid !== sessionId) return;
       showConfirm(false);
       show('shoot');
+      startPreviewLoop();
       $('status').textContent = 'Bersiap...';
       if (!(await waitForVideo())) {
         $('camMsg').textContent = 'Kamera tidak mengirim gambar. Coba lagi.';
@@ -956,6 +1010,10 @@
   $('btnCancel').addEventListener('click', onCancelClick);
   $('btnResume').addEventListener('click', () => { paused = false; showConfirm(false); });
   $('btnCancelYes').addEventListener('click', () => { showConfirm(false); cancelSession(); });
+  $('btnDesign').addEventListener('click', (e) => { e.stopPropagation(); togglePicker(); });
+  document.addEventListener('click', (e) => {
+    if (!$('pickerWrap').hidden && !e.target.closest('#pickerWrap')) togglePicker(false);
+  });
   $('btnFs').addEventListener('click', () => {
     const el = document.documentElement;
     if (document.fullscreenElement) document.exitFullscreen();
