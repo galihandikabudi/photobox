@@ -99,9 +99,50 @@
   button.ghost { background: transparent; color: var(--cream); border: 3px solid rgba(255,248,231,.55); }
   .corner { position: absolute; top: 24px; right: 24px; font-size: 20px; padding: 12px 22px; opacity: .55; }
 
+  /* ---------- start: pilihan desain ---------- */
+  .s-start-hasPicker h1 { font-size: 88px; }
+  .s-start-hasPicker .sub { font-size: 26px; }
+  .s-start-hasPicker { gap: 18px; }
+  .pick-label { font-size: 24px; font-weight: 700; opacity: .92; margin-bottom: 8px; }
+  .picker { display: flex; gap: 16px; justify-content: center; max-width: 1560px; overflow-x: auto; padding: 6px 12px; }
+  .dz {
+    flex: 0 0 auto;
+    width: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border: 4px solid transparent;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--cream);
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .dz.sel { border-color: var(--accent); background: rgba(255,255,255,.1); }
+  .dz.bad { opacity: .4; }
+  .dz canvas { width: 100px; height: 300px; border-radius: 6px; background: #fff; display: block; }
+  .dz span { max-width: 124px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
   /* ---------- shoot ---------- */
   #s-shoot { justify-content: flex-start; padding-top: 36px; gap: 20px; }
   #status { font-size: 46px; font-weight: 800; color: var(--cream); height: 56px; line-height: 56px; }
+  #btnCancel { position: absolute; top: 24px; left: 24px; font-size: 26px; padding: 16px 34px; }
+  #confirm {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    background: rgba(16,26,71,.9);
+  }
+  #confirm.on { display: flex; }
+  #confirm h2 { font-size: 60px; color: var(--accent); }
+  #confirm p { font-size: 30px; max-width: 800px; }
   /* 1080 x 710 = tepat 2x jendela foto (540 x 355), jadi preview = hasil jepretan */
   .cam {
     position: relative;
@@ -185,6 +226,10 @@
   <div class="badge">SMK MUHAMMADIYAH TODANAN</div>
   <h1>PHOTOBOX</h1>
   <p class="sub">Ambil 4 foto seru, langsung jadi strip foto berframe.<br>Scan QR untuk mengunduh hasilnya ke HP kamu.</p>
+  <div id="pickerWrap" hidden>
+    <p class="pick-label">Pilih desain strip</p>
+    <div id="picker" class="picker"></div>
+  </div>
   <button id="btnStart" class="big">Mulai Foto</button>
   <p id="camMsg" class="msg"></p>
   <button id="btnCamRetry" class="ghost" hidden>Coba lagi</button>
@@ -192,6 +237,7 @@
 </section>
 
 <section id="s-shoot" class="screen">
+  <button id="btnCancel" class="ghost">Batalkan</button>
   <div id="status"></div>
   <div class="cam">
     <video id="video" autoplay playsinline muted></video>
@@ -199,6 +245,14 @@
     <div id="flash"></div>
   </div>
   <div class="thumbs" id="thumbs"></div>
+  <div id="confirm">
+    <h2>Batalkan sesi foto?</h2>
+    <p>Foto yang sudah diambil akan dihapus.</p>
+    <div class="row">
+      <button id="btnResume">Lanjut foto</button>
+      <button id="btnCancelYes" class="ghost">Ya, batalkan</button>
+    </div>
+  </div>
 </section>
 
 <section id="s-process" class="screen">
@@ -249,10 +303,12 @@
     resultIdleSeconds: 90,  // layar hasil kembali ke awal setelah sekian detik tanpa sentuhan
     retentionDays: 7,       // hanya teks informasi; atur RETENTION_DAYS di server agar sama
     uploadUrl: '/api/upload',
+    backgroundsUrl: '/api/backgrounds',  // daftar desain yang diunggah lewat /admin
     frameUrl: 'frame.png',
-    chromaKey: true,        // piksel magenta murni (#FF00FF) di frame.png dijadikan transparan
+    chromaKey: true,        // piksel magenta murni (#FF00FF) di gambar frame dijadikan transparan
     strip: { w: 600, h: 1800 },
     slot: { x: 30, w: 540, h: 355, top: 170, gap: 20 },
+    thumb: { w: 200, h: 600 },           // ukuran kanvas pratinjau desain (tampil 100 x 300)
     brand: {
       line1: 'SMK MUHAMMADIYAH TODANAN',
       title: 'PHOTOBOX',
@@ -260,11 +316,15 @@
       footer2: '#SMKMuhada'
     }
   };
+  // Desain bawaan (frame.png bila ada, atau frame contoh yang digambar aplikasi)
+  const BUILTIN = { id: 'builtin', name: 'Bawaan', type: 'builtin', showText: true };
 
   const $ = (id) => document.getElementById(id);
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const S = CONFIG.scale;
   const slotY = (i) => CONFIG.slot.top + i * (CONFIG.slot.h + CONFIG.slot.gap);
+
+  class Cancelled extends Error {}
 
   /* ====================== RASIO TETAP ====================== */
   function fitStage() {
@@ -285,6 +345,12 @@
   let idleLeft = 0;
   let wakeLock = null;
   let framePromise = null;
+  let sessionId = 0;      // naik setiap sesi baru/reset, agar hasil unggahan lama diabaikan
+  let cancelled = false;
+  let paused = false;
+  let designs = [BUILTIN];
+  let selected = BUILTIN;
+  let loadSeq = 0;
 
   $('privacy').textContent =
     'Foto diunggah ke server sekolah dan otomatis dihapus dalam ' + CONFIG.retentionDays +
@@ -393,6 +459,16 @@
     }
   }
 
+  // Menunggu ms milidetik; berhenti saat jeda (dialog batal terbuka) dan melempar Cancelled bila dibatalkan.
+  async function wait(ms) {
+    let left = ms;
+    while (left > 0) {
+      await sleep(100);
+      if (cancelled) throw new Cancelled('batal');
+      if (!paused) left -= 100;
+    }
+  }
+
   async function countdown(n) {
     const el = $('count');
     for (let i = n; i >= 1; i--) {
@@ -400,7 +476,7 @@
       el.classList.remove('pop');
       void el.offsetWidth;
       el.classList.add('pop');
-      await sleep(1000);
+      await wait(1000);
     }
     el.textContent = '';
     el.classList.remove('pop');
@@ -412,7 +488,7 @@
     requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove('on')));
   }
 
-  /* ====================== FRAME & STRIP ====================== */
+  /* ====================== FRAME, LATAR & STRIP ====================== */
   function loadImage(src) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -495,21 +571,187 @@
     return framePromise;
   }
 
+  const imgCache = new Map();    // id desain -> Promise<Image>
+  const layerCache = new Map();  // "id:WxH" -> canvas frame yang sudah di-chroma-key
+
+  function getImage(d) {
+    if (!imgCache.has(d.id)) {
+      const p = loadImage(d.url);
+      p.catch(() => imgCache.delete(d.id));
+      imgCache.set(d.id, p);
+    }
+    return imgCache.get(d.id);
+  }
+
+  // Lapisan yang digambar: "under" sebelum foto (latar), "over" sesudah foto (frame).
+  async function layersFor(d, W, H) {
+    if (d.type === 'builtin') return { under: null, over: await getFrame() };
+    const img = await getImage(d);
+    if (d.type === 'frame') {
+      if (!CONFIG.chromaKey) return { under: null, over: img };
+      const key = d.id + ':' + W + 'x' + H;
+      if (!layerCache.has(key)) {
+        if (W === CONFIG.strip.w * S) {
+          // simpan hanya satu kanvas ukuran penuh agar memori tidak membengkak
+          const suffix = ':' + W + 'x' + H;
+          for (const k of Array.from(layerCache.keys())) if (k.endsWith(suffix)) layerCache.delete(k);
+        }
+        layerCache.set(key, applyChromaKey(img, W, H));
+      }
+      return { under: null, over: layerCache.get(key) };
+    }
+    return { under: img, over: null };
+  }
+
+  function drawCover(ctx, img, W, H) {
+    const iw = img.naturalWidth || img.width;
+    const ih = img.naturalHeight || img.height;
+    const s = Math.max(W / iw, H / ih);
+    const dw = iw * s;
+    const dh = ih * s;
+    ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+  }
+
+  // Teks judul & footer untuk desain unggahan (dengan garis tepi tipis agar terbaca di atas gambar apa pun).
+  function drawBrandText(ctx, k) {
+    const B = CONFIG.brand;
+    const W = CONFIG.strip.w;
+    const footTop = slotY(CONFIG.shots - 1) + CONFIG.slot.h;
+    ctx.save();
+    ctx.scale(k, k);
+    ctx.textAlign = 'center';
+    ctx.lineJoin = 'round';
+    const put = (t, y, font, fill) => {
+      ctx.font = font;
+      ctx.lineWidth = 7;
+      ctx.strokeStyle = 'rgba(16,26,71,.65)';
+      ctx.strokeText(t, W / 2, y);
+      ctx.fillStyle = fill;
+      ctx.fillText(t, W / 2, y);
+    };
+    put(B.line1, 68, '700 27px system-ui, sans-serif', '#F28C00');
+    put(B.title, 142, '800 72px system-ui, sans-serif', '#fff8e7');
+    put(B.footer1, footTop + 62, '800 40px system-ui, sans-serif', '#F28C00');
+    put(B.footer2, footTop + 104, '600 28px system-ui, sans-serif', '#fff8e7');
+    ctx.restore();
+  }
+
+  // k = piksel per satuan dasar (2 untuk hasil akhir, sekitar 0,33 untuk pratinjau).
+  function drawStrip(ctx, k, photoList, L, showText) {
+    const W = CONFIG.strip.w * k;
+    const H = CONFIG.strip.h * k;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+    if (L.under) drawCover(ctx, L.under, W, H);
+    for (let i = 0; i < CONFIG.shots; i++) {
+      const x = CONFIG.slot.x * k;
+      const y = slotY(i) * k;
+      const w = CONFIG.slot.w * k;
+      const h = CONFIG.slot.h * k;
+      if (photoList[i]) {
+        ctx.drawImage(photoList[i], x, y, w, h);
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,.35)';   // penanda posisi foto pada pratinjau
+        ctx.fillRect(x, y, w, h);
+      }
+    }
+    if (L.over) ctx.drawImage(L.over, 0, 0, W, H);
+    if (showText) drawBrandText(ctx, k);
+  }
+
+  const textOn = (d) => d.type !== 'builtin' && d.showText;
+
   async function composeStrip() {
     const W = CONFIG.strip.w * S;
     const H = CONFIG.strip.h * S;
     const c = document.createElement('canvas');
     c.width = W;
     c.height = H;
-    const ctx = c.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, W, H);
-    photos.forEach((p, i) => {
-      ctx.drawImage(p, CONFIG.slot.x * S, slotY(i) * S, CONFIG.slot.w * S, CONFIG.slot.h * S);
-    });
-    const frame = await getFrame();
-    ctx.drawImage(frame, 0, 0, W, H);
+    let d = selected;
+    let L;
+    try {
+      L = await layersFor(d, W, H);
+    } catch (e) {
+      d = BUILTIN;   // gambar desain gagal dimuat (mis. baru dihapus): pakai bawaan
+      L = await layersFor(d, W, H);
+    }
+    drawStrip(c.getContext('2d'), S, photos, L, textOn(d));
     return c;
+  }
+
+  /* ====================== PILIHAN DESAIN ====================== */
+  function markSelected() {
+    document.querySelectorAll('#picker .dz').forEach((b) => {
+      b.classList.toggle('sel', b.dataset.id === selected.id);
+    });
+  }
+
+  async function drawThumb(d, canvas, btn) {
+    const ctx = canvas.getContext('2d');
+    try {
+      const L = await layersFor(d, canvas.width, canvas.height);
+      drawStrip(ctx, canvas.width / CONFIG.strip.w, [], L, textOn(d));
+    } catch (e) {
+      d.broken = true;
+      btn.classList.add('bad');
+      ctx.fillStyle = '#888';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (selected === d) {
+        selected = designs.find((x) => !x.broken) || BUILTIN;
+        markSelected();
+      }
+    }
+  }
+
+  function renderPicker() {
+    const box = $('picker');
+    box.innerHTML = '';
+    const many = designs.length > 1;
+    $('pickerWrap').hidden = !many;
+    $('s-start').classList.toggle('s-start-hasPicker', many);
+    if (!many) return;
+    designs.forEach((d) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'dz';
+      b.dataset.id = d.id;
+      const c = document.createElement('canvas');
+      c.width = CONFIG.thumb.w;
+      c.height = CONFIG.thumb.h;
+      const l = document.createElement('span');
+      l.textContent = d.name;
+      b.appendChild(c);
+      b.appendChild(l);
+      b.addEventListener('click', () => {
+        if (d.broken) return;
+        selected = d;
+        markSelected();
+      });
+      box.appendChild(b);
+      drawThumb(d, c, b);
+    });
+    markSelected();
+  }
+
+  async function loadDesigns() {
+    const my = ++loadSeq;
+    let list = [BUILTIN];
+    try {
+      const r = await fetch(CONFIG.backgroundsUrl, { cache: 'no-cache' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      const items = Array.isArray(j.items) ? j.items : [];
+      list = [];
+      if (!(j.settings && j.settings.hideBuiltin && items.length)) list.push(BUILTIN);
+      items.forEach((it) => list.push({ id: it.id, name: it.name, type: it.type, showText: !!it.showText, url: it.url }));
+    } catch (e) {
+      list = [BUILTIN];
+    }
+    if (my !== loadSeq) return;
+    designs = list;
+    if (!designs.some((d) => d.id === selected.id)) selected = designs[0];
+    else selected = designs.find((d) => d.id === selected.id);
+    renderPicker();
   }
 
   /* ====================== UNGGAH & QR ====================== */
@@ -563,15 +805,19 @@
     $('btnRetry').hidden = false;
   }
 
-  async function doUpload() {
+  async function doUpload(sid) {
+    if (sid === undefined) sid = sessionId;
     setQrLoading();
     stopIdle();
+    let url = null;
     try {
       const r = await uploadBlob(currentBlob);
-      setQr(r.url);
+      url = r.url;
     } catch (e) {
-      setQrError();
+      url = null;
     }
+    if (sid !== sessionId) return;   // sesi sudah berganti (Selesai/Foto Lagi ditekan saat mengunggah)
+    if (url) setQr(url); else setQrError();
     startIdle();
   }
 
@@ -592,44 +838,82 @@
   $('s-result').addEventListener('pointerdown', () => { idleLeft = CONFIG.resultIdleSeconds; });
 
   function resetToStart(autoStart) {
+    sessionId++;
     stopIdle();
     if (stripUrl) { URL.revokeObjectURL(stripUrl); stripUrl = null; }
     currentBlob = null;
     photos = [];
     busy = false;
     show('start');
+    loadDesigns();
     if (autoStart) startSession();
+  }
+
+  /* ====================== BATALKAN ====================== */
+  function showConfirm(on) { $('confirm').classList.toggle('on', on); }
+  function cancelSession() { cancelled = true; paused = false; }
+
+  function onCancelClick() {
+    if (!busy || !$('s-shoot').classList.contains('active')) return;
+    if (photos.length === 0) { cancelSession(); return; }
+    paused = true;          // hitung mundur berhenti selama dialog konfirmasi terbuka
+    showConfirm(true);
+  }
+
+  function abortToStart() {
+    photos = [];
+    busy = false;
+    paused = false;
+    cancelled = false;
+    showConfirm(false);
+    $('count').textContent = '';
+    $('count').classList.remove('pop');
+    show('start');
+    loadDesigns();
   }
 
   /* ====================== ALUR UTAMA ====================== */
   async function startSession() {
     if (busy) return;
     busy = true;
+    const sid = ++sessionId;
+    cancelled = false;
+    paused = false;
     requestWakeLock();
-    if (!(await initCamera())) { busy = false; show('start'); return; }
-    photos = [];
-    renderThumbs();
-    show('shoot');
-    $('status').textContent = 'Bersiap...';
-    if (!(await waitForVideo())) {
-      $('camMsg').textContent = 'Kamera tidak mengirim gambar. Coba lagi.';
-      $('btnCamRetry').hidden = false;
-      busy = false;
-      show('start');
-      return;
-    }
-    for (let i = 0; i < CONFIG.shots; i++) {
-      $('status').textContent = 'Foto ' + (i + 1) + ' dari ' + CONFIG.shots;
-      await countdown(i === 0 ? CONFIG.countdownFirst : CONFIG.countdownNext);
-      photos.push(captureFrame());
-      flash();
+    try {
+      if (!(await initCamera())) { busy = false; show('start'); return; }
+      photos = [];
       renderThumbs();
-      await sleep(CONFIG.gapMs);
+      showConfirm(false);
+      show('shoot');
+      $('status').textContent = 'Bersiap...';
+      if (!(await waitForVideo())) {
+        $('camMsg').textContent = 'Kamera tidak mengirim gambar. Coba lagi.';
+        $('btnCamRetry').hidden = false;
+        busy = false;
+        show('start');
+        return;
+      }
+      if (cancelled) throw new Cancelled('batal');
+      for (let i = 0; i < CONFIG.shots; i++) {
+        $('status').textContent = 'Foto ' + (i + 1) + ' dari ' + CONFIG.shots;
+        await countdown(i === 0 ? CONFIG.countdownFirst : CONFIG.countdownNext);
+        photos.push(captureFrame());
+        flash();
+        renderThumbs();
+        await wait(CONFIG.gapMs);
+      }
+      await finishSession(sid);
+    } catch (e) {
+      if (!(e instanceof Cancelled)) {
+        console.error(e);
+        $('camMsg').textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+      }
+      abortToStart();
     }
-    await finishSession();
   }
 
-  async function finishSession() {
+  async function finishSession(sid) {
     show('process');
     await sleep(60);
     try {
@@ -641,13 +925,15 @@
       $('camMsg').textContent = 'Gagal menyusun foto. Silakan coba lagi.';
       busy = false;
       show('start');
+      loadDesigns();
       return;
     }
+    if (sid !== sessionId) return;
     if (stripUrl) URL.revokeObjectURL(stripUrl);
     stripUrl = URL.createObjectURL(currentBlob);
     $('stripImg').src = stripUrl;
     show('result');
-    await doUpload();
+    await doUpload(sid);
   }
 
   function saveLocal() {
@@ -663,10 +949,13 @@
   /* ====================== EVENT ====================== */
   $('btnStart').addEventListener('click', startSession);
   $('btnCamRetry').addEventListener('click', startSession);
-  $('btnRetry').addEventListener('click', doUpload);
+  $('btnRetry').addEventListener('click', () => doUpload());
   $('btnSave').addEventListener('click', saveLocal);
   $('btnAgain').addEventListener('click', () => resetToStart(true));
   $('btnDone').addEventListener('click', () => resetToStart(false));
+  $('btnCancel').addEventListener('click', onCancelClick);
+  $('btnResume').addEventListener('click', () => { paused = false; showConfirm(false); });
+  $('btnCancelYes').addEventListener('click', () => { showConfirm(false); cancelSession(); });
   $('btnFs').addEventListener('click', () => {
     const el = document.documentElement;
     if (document.fullscreenElement) document.exitFullscreen();
@@ -677,12 +966,15 @@
     if ((e.key === 'Enter' || e.key === ' ') && $('s-start').classList.contains('active')) {
       e.preventDefault();
       startSession();
+    } else if (e.key === 'Escape' && $('s-shoot').classList.contains('active')) {
+      onCancelClick();
     }
   });
 
-  // Siapkan kamera & frame lebih awal agar mulai terasa cepat
+  // Siapkan kamera, frame, dan daftar desain lebih awal agar mulai terasa cepat
   initCamera();
   getFrame();
+  loadDesigns();
 })();
 </script>
 </body>

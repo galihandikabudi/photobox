@@ -129,3 +129,28 @@ Teks pada frame bawaan bisa diubah di bagian `CONFIG.brand` dalam `public/index.
 - Jika unggahan gagal, tombol **Simpan di sini** tetap menyimpan strip langsung dari layar kiosk.
 - Alamat kiosk bersifat publik. Sebarkan hanya ke panitia; untuk pembatasan lebih ketat, Cloudflare Access atau aturan rate limiting bisa dipasang pada `/api/upload`.
 - Siapkan pemberitahuan di lokasi bahwa foto diunggah dan dihapus otomatis setelah 7 hari (peserta banyak yang pelajar).
+
+---
+
+## Desain strip (latar / frame) & halaman admin
+
+Buka `https://<domain-anda>/admin` untuk mengunggah gambar desain. Gambar disimpan di R2 (`backgrounds/`) dan otomatis muncul sebagai pilihan di layar awal kiosk.
+
+**Sandi admin** (wajib, sekali saja):
+
+```
+npx wrangler pages secret put ADMIN_PASSWORD --project-name photobox-muhada
+```
+
+(Karena ada `wrangler.toml`, Variables/Secrets di dashboard hanya-baca, jadi gunakan perintah di atas.) Uji lokal: salin `.dev.vars.example` menjadi `.dev.vars`, lalu `npm run dev`.
+
+**Jenis desain**
+- **Latar**: gambar di belakang foto (menutupi seluruh strip).
+- **Frame**: gambar di atas foto; area foto transparan atau diisi magenta murni `#FF00FF`.
+- Ukuran ideal **1200 x 3600 px** (rasio 1:3), PNG/JPG/WebP maks. 8 MB.
+- **Tampilkan teks**: jika mati (bawaan), judul/footer tidak digambar sehingga strip 100% dari gambar. Frame bawaan tetap bertuliskan.
+- Opsi "Sembunyikan frame bawaan" ada di admin.
+
+**Tombol Batalkan**: di layar pemotretan; jika sudah ada foto akan meminta konfirmasi. Tombol Esc juga membatalkan.
+
+Lifecycle rule R2 (hapus 7 hari) hanya untuk prefix `strips/`, jangan seluruh bucket, agar desain tidak ikut terhapus.

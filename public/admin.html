@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1B2E6E">
+<title>Admin Photobox SMK Muhada</title>
+<link rel="icon" href="icon-192.png">
+<style>
+  :root { --blue: #1A6FE8; --dark: #1B2E6E; --accent: #F28C00; --cream: #fff8e7; --danger: #ff8a80; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { min-height: 100vh; background: radial-gradient(circle at 50% 0, rgba(26,111,232,.4), transparent 70%), var(--dark);
+    color: var(--cream); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5; padding: 24px 16px 60px; }
+  main { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 18px; color: var(--accent); margin-bottom: 10px; }
+  a { color: var(--cream); }
+  .card { background: rgba(255,255,255,.08); border: 1px solid rgba(255,248,231,.18); border-radius: 14px; padding: 16px; }
+  label { display: block; font-size: 14px; margin: 10px 0 4px; }
+  input[type=text], input[type=password], select, input[type=file] {
+    width: 100%; font: inherit; color: var(--cream); background: rgba(0,0,0,.25); border: 1px solid rgba(255,248,231,.3);
+    border-radius: 8px; padding: 10px 12px; }
+  select option { color: #111; }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; margin: 12px 0 0; }
+  .check input { margin-top: 4px; width: 18px; height: 18px; flex: 0 0 auto; }
+  button { font: inherit; font-weight: 700; border: 0; cursor: pointer; border-radius: 999px; padding: 10px 20px;
+    background: var(--accent); color: var(--dark); }
+  button.ghost { background: transparent; color: var(--cream); border: 1px solid rgba(255,248,231,.5); }
+  button.danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+  button:disabled { opacity: .5; cursor: default; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+  .hint { font-size: 13px; opacity: .8; margin-top: 6px; }
+  .err { color: var(--danger); font-size: 14px; margin-top: 10px; min-height: 1.2em; }
+  .ok { color: #9be7a6; font-size: 14px; margin-top: 10px; min-height: 1.2em; }
+  .warn { color: #ffd27a; font-size: 13px; margin-top: 6px; }
+  #list { display: flex; flex-direction: column; gap: 14px; }
+  .item { display: grid; grid-template-columns: 96px 1fr; gap: 14px; padding: 12px; border-radius: 12px; background: rgba(0,0,0,.18); }
+  .thumb { width: 96px; height: 288px; border-radius: 6px; overflow: hidden;
+    background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 16px 16px; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .item .fields { display: flex; flex-direction: column; gap: 4px; }
+  .empty { opacity: .75; font-size: 14px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Admin Photobox</h1>
+    <span><a href="/" target="_blank" rel="noopener">Buka kiosk</a> <span id="logoutWrap" hidden> | <a href="#" id="btnLogout">Keluar</a></span></span>
+  </header>
+
+  <section id="login" class="card">
+    <h2>Masuk</h2>
+    <label for="pw">Kata sandi admin</label>
+    <input id="pw" type="password" autocomplete="current-password">
+    <div class="row"><button id="btnLogin">Masuk</button></div>
+    <p id="loginMsg" class="err"></p>
+  </section>
+
+  <div id="panel" hidden>
+    <section class="card">
+      <h2>Unggah desain baru</h2>
+      <label for="file">Gambar (PNG, JPG, atau WebP, maks. 8 MB)</label>
+      <input id="file" type="file" accept="image/png,image/jpeg,image/webp">
+      <p id="dims" class="hint"></p>
+      <label for="name">Nama desain</label>
+      <input id="name" type="text" maxlength="40" placeholder="mis. Hari Pendidikan">
+      <label for="type">Jenis</label>
+      <select id="type">
+        <option value="latar">Latar: gambar di belakang foto (seluruh strip)</option>
+        <option value="frame">Frame: gambar di atas foto, dengan jendela transparan atau magenta #FF00FF</option>
+      </select>
+      <label class="check"><input id="showText" type="checkbox"> Tampilkan teks judul dan footer di atas gambar (matikan agar strip sepenuhnya dari gambar)</label>
+      <p class="hint">Ukuran ideal 1200 x 3600 px (rasio 1:3). Empat foto akan ditempatkan di posisi yang sama seperti pada panduan frame di README.</p>
+      <div class="row"><button id="btnUpload">Unggah</button></div>
+      <p id="uploadMsg" class="err"></p>
+    </section>
+
+    <section class="card">
+      <h2>Pengaturan kiosk</h2>
+      <label class="check"><input id="hideBuiltin" type="checkbox"> Sembunyikan frame bawaan (hanya desain yang diunggah yang tampil, jika ada minimal satu)</label>
+      <p id="settingsMsg" class="ok"></p>
+    </section>
+
+    <section class="card">
+      <h2>Desain tersimpan</h2>
+      <div id="list"><p class="empty">Memuat...</p></div>
+      <p id="listMsg" class="err"></p>
+    </section>
+  </div>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  let pw = '';
+  try { pw = sessionStorage.getItem('pb_admin') || ''; } catch (e) { /* abaikan */ }
+
+  async function api(path, opts) {
+    opts = opts || {};
+    const headers = Object.assign({}, opts.headers || {}, { Authorization: 'Bearer ' + pw });
+    const r = await fetch(path, Object.assign({}, opts, { headers }));
+    let data = null;
+    try { data = await r.json(); } catch (e) { /* tanpa isi */ }
+    if (!r.ok) {
+      const err = new Error((data && data.error) || ('Gagal (HTTP ' + r.status + ')'));
+      err.status = r.status;
+      throw err;
+    }
+    return data;
+  }
+
+  function setLoggedIn(on) {
+    $('login').hidden = on;
+    $('panel').hidden = !on;
+    $('logoutWrap').hidden = !on;
+  }
+
+  async function login(password) {
+    pw = password;
+    $('loginMsg').textContent = '';
+    try {
+      await api('/api/admin/ping');
+      try { sessionStorage.setItem('pb_admin', pw); } catch (e) { /* abaikan */ }
+      setLoggedIn(true);
+      await loadList();
+    } catch (e) {
+      pw = '';
+      try { sessionStorage.removeItem('pb_admin'); } catch (e2) { /* abaikan */ }
+      setLoggedIn(false);
+      $('loginMsg').textContent = e.status === 503
+        ? 'ADMIN_PASSWORD belum diatur di Cloudflare Pages (lihat README).'
+        : (e.message || 'Tidak bisa masuk.');
+    }
+  }
+
+  $('btnLogin').addEventListener('click', () => login($('pw').value));
+  $('pw').addEventListener('keydown', (e) => { if (e.key === 'Enter') login($('pw').value); });
+  $('btnLogout').addEventListener('click', (e) => {
+    e.preventDefault();
+    pw = '';
+    try { sessionStorage.removeItem('pb_admin'); } catch (e2) { /* abaikan */ }
+    $('pw').value = '';
+    setLoggedIn(false);
+  });
+
+  /* ---------- daftar ---------- */
+  function itemRow(it) {
+    const row = document.createElement('div');
+    row.className = 'item';
+
+    const th = document.createElement('div');
+    th.className = 'thumb';
+    const img = document.createElement('img');
+    img.src = it.url;
+    img.alt = it.name;
+    th.appendChild(img);
+
+    const f = document.createElement('div');
+    f.className = 'fields';
+
+    const nameIn = document.createElement('input');
+    nameIn.type = 'text';
+    nameIn.maxLength = 40;
+    nameIn.value = it.name;
+
+    const typeSel = document.createElement('select');
+    [['latar', 'Latar (di belakang foto)'], ['frame', 'Frame (di atas foto)']].forEach((o) => {
+      const opt = document.createElement('option');
+      opt.value = o[0];
+      opt.textContent = o[1];
+      typeSel.appendChild(opt);
+    });
+    typeSel.value = it.type;
+
+    const chkWrap = document.createElement('label');
+    chkWrap.className = 'check';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.checked = it.showText;
+    chkWrap.appendChild(chk);
+    chkWrap.appendChild(document.createTextNode(' Tampilkan teks judul dan footer'));
+
+    const msg = document.createElement('p');
+    msg.className = 'ok';
+
+    async function save(patch) {
+      msg.className = 'ok';
+      msg.textContent = 'Menyimpan...';
+      try {
+        await api('/api/admin/backgrounds/' + it.id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(patch)
+        });
+        msg.textContent = 'Tersimpan.';
+      } catch (e) {
+        msg.className = 'err';
+        msg.textContent = e.message;
+      }
+    }
+    nameIn.addEventListener('change', () => save({ name: nameIn.value }));
+    typeSel.addEventListener('change', () => save({ type: typeSel.value }));
+    chk.addEventListener('change', () => save({ showText: chk.checked }));
+
+    const del = document.createElement('button');
+    del.className = 'danger';
+    del.textContent = 'Hapus';
+    del.addEventListener('click', async () => {
+      if (!confirm('Hapus desain "' + it.name + '"?')) return;
+      try {
+        await api('/api/admin/backgrounds/' + it.id, { method: 'DELETE' });
+        await loadList();
+      } catch (e) {
+        msg.className = 'err';
+        msg.textContent = e.message;
+      }
+    });
+
+    const rowBtn = document.createElement('div');
+    rowBtn.className = 'row';
+    rowBtn.appendChild(del);
+
+    f.append(nameIn, typeSel, chkWrap, rowBtn, msg);
+    row.append(th, f);
+    return row;
+  }
+
+  async function loadList() {
+    $('listMsg').textContent = '';
+    try {
+      const r = await fetch('/api/backgrounds', { cache: 'no-cache' });
+      const j = await r.json();
+      const list = $('list');
+      list.innerHTML = '';
+      if (!j.items.length) {
+        const p = document.createElement('p');
+        p.className = 'empty';
+        p.textContent = 'Belum ada desain yang diunggah. Kiosk memakai frame bawaan.';
+        list.appendChild(p);
+      } else {
+        j.items.forEach((it) => list.appendChild(itemRow(it)));
+      }
+      $('hideBuiltin').checked = !!(j.settings && j.settings.hideBuiltin);
+    } catch (e) {
+      $('listMsg').textContent = 'Gagal memuat daftar desain.';
+    }
+  }
+
+  /* ---------- unggah ---------- */
+  $('file').addEventListener('change', () => {
+    const file = $('file').files[0];
+    $('dims').textContent = '';
+    $('dims').className = 'hint';
+    if (!file) return;
+    if (!$('name').value) $('name').value = file.name.replace(/\.[^.]+$/, '').slice(0, 40);
+    const u = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      let t = 'Ukuran gambar: ' + w + ' x ' + h + ' px.';
+      if (Math.abs(h / w - 3) > 0.05) {
+        t += ' Rasio bukan 1:3. Jenis Latar akan dipotong di bagian tengah; jenis Frame akan melar.';
+        $('dims').className = 'warn';
+      }
+      $('dims').textContent = t;
+      URL.revokeObjectURL(u);
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); };
+    img.src = u;
+  });
+
+  $('btnUpload').addEventListener('click', async () => {
+    const file = $('file').files[0];
+    const msg = $('uploadMsg');
+    msg.className = 'err';
+    if (!file) { msg.textContent = 'Pilih gambar dulu.'; return; }
+    if (file.size > 8 * 1024 * 1024) { msg.textContent = 'Gambar lebih dari 8 MB.'; return; }
+    $('btnUpload').disabled = true;
+    msg.className = 'ok';
+    msg.textContent = 'Mengunggah...';
+    try {
+      const q = new URLSearchParams({
+        name: $('name').value || 'Desain baru',
+        type: $('type').value,
+        text: $('showText').checked ? '1' : '0'
+      });
+      await api('/api/admin/backgrounds?' + q.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file
+      });
+      msg.textContent = 'Berhasil diunggah.';
+      $('file').value = '';
+      $('name').value = '';
+      $('dims').textContent = '';
+      await loadList();
+    } catch (e) {
+      msg.className = 'err';
+      msg.textContent = e.message;
+    } finally {
+      $('btnUpload').disabled = false;
+    }
+  });
+
+  /* ---------- pengaturan ---------- */
+  $('hideBuiltin').addEventListener('change', async () => {
+    const m = $('settingsMsg');
+    m.className = 'ok';
+    m.textContent = 'Menyimpan...';
+    try {
+      await api('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hideBuiltin: $('hideBuiltin').checked })
+      });
+      m.textContent = 'Tersimpan. Kiosk memperbarui daftar saat kembali ke layar awal.';
+    } catch (e) {
+      m.className = 'err';
+      m.textContent = e.message;
+    }
+  });
+
+  if (pw) login(pw);
+})();
+</script>
+</body>
+</html>

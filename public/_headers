@@ -5,3 +5,10 @@
 
 /frame.png
   Cache-Control: no-cache
+
+/admin*
+  X-Frame-Options: DENY
+  Cache-Control: no-store
+
+/api/admin/*
+  Cache-Control: no-store
