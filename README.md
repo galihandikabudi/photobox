@@ -154,3 +154,5 @@ npx wrangler pages secret put ADMIN_PASSWORD --project-name photobox-muhada
 **Tombol Batalkan**: di layar pemotretan; jika sudah ada foto akan meminta konfirmasi. Tombol Esc juga membatalkan.
 
 Lifecycle rule R2 (hapus 7 hari) hanya untuk prefix `strips/`, jangan seluruh bucket, agar desain tidak ikut terhapus.
+
+**Catatan:** sandi admin saat ini tertulis di `wrangler.toml` (`ADMIN_PASSWORD = "smkbisa"`), jadi repo GitHub sebaiknya **private**. Untuk mengganti sandi, ubah nilai itu lalu push ulang. Jika ingin menyembunyikannya, hapus baris itu dan pakai `wrangler pages secret put ADMIN_PASSWORD`.

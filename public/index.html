@@ -167,6 +167,8 @@
     border-radius: 6px;
     overflow: hidden;
   }
+  #freeze { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
+  #freeze.on { display: block; }
   .cam video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: block; }
   #count {
     position: absolute; inset: 0;
@@ -252,6 +254,7 @@
     <div id="status"></div>
     <div class="cam">
       <video id="video" autoplay playsinline muted></video>
+      <canvas id="freeze" width="1080" height="710"></canvas>
       <div id="count"></div>
       <div id="flash"></div>
     </div>
@@ -483,12 +486,41 @@
 
   function renderThumbs() { drawPreview(); }
 
+  let liveOn = true;
+  let flashSlot = -1;
+  let flashAt = 0;
+  const FLASH_MS = 700;
+
+  function freezeShot(c) {
+    const f = $('freeze');
+    f.width = c.width;
+    f.height = c.height;
+    f.getContext('2d').drawImage(c, 0, 0);
+    f.classList.add('on');
+  }
+  const unfreeze = () => $('freeze').classList.remove('on');
+
   function drawPreview() {
     const cv = $('stripPrev');
     if (!prevLayers) return;
     const list = photos.slice();
-    if (photos.length < CONFIG.shots && drawVideoTo(liveCanvas)) list[photos.length] = liveCanvas;
-    drawStrip(cv.getContext('2d'), PREV_K, list, prevLayers, prevText);
+    if (liveOn && photos.length < CONFIG.shots && drawVideoTo(liveCanvas)) list[photos.length] = liveCanvas;
+    const ctx = cv.getContext('2d');
+    drawStrip(ctx, PREV_K, list, prevLayers, prevText);
+    // kilatan putih pada foto yang baru saja masuk ke strip
+    const age = performance.now() - flashAt;
+    if (flashSlot >= 0 && age < FLASH_MS) {
+      const a = 1 - age / FLASH_MS;
+      const x = CONFIG.slot.x * PREV_K, y = slotY(flashSlot) * PREV_K;
+      const w = CONFIG.slot.w * PREV_K, h = CONFIG.slot.h * PREV_K;
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,' + (0.9 * a * a).toFixed(3) + ')';
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = 'rgba(242,140,0,' + a.toFixed(3) + ')';
+      ctx.lineWidth = 6 * a + 1;
+      ctx.strokeRect(x, y, w, h);
+      ctx.restore();
+    }
   }
 
   function startPreviewLoop() {
@@ -496,7 +528,7 @@
     let last = 0;
     const tick = (t) => {
       if (my !== prevRun || !$('s-shoot').classList.contains('active')) return;
-      if (t - last > 60) { last = t; drawPreview(); }
+      if (t - last > 60 || performance.now() - flashAt < FLASH_MS) { last = t; drawPreview(); }
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -935,6 +967,9 @@
       if (!(await initCamera())) { busy = false; show('start'); return; }
       photos = [];
       prevLayers = null;
+      unfreeze();
+      liveOn = true;
+      flashSlot = -1;
       await preparePreview();
       if (sid !== sessionId) return;
       showConfirm(false);
@@ -952,10 +987,17 @@
       for (let i = 0; i < CONFIG.shots; i++) {
         $('status').textContent = 'Foto ' + (i + 1) + ' dari ' + CONFIG.shots;
         await countdown(i === 0 ? CONFIG.countdownFirst : CONFIG.countdownNext);
-        photos.push(captureFrame());
+        const shot = captureFrame();
+        photos.push(shot);
+        liveOn = false;              // strip menampilkan foto yang sudah jadi (diam), bukan kamera
+        freezeShot(shot);            // layar kamera juga membeku pada foto tersebut
+        flashSlot = photos.length - 1;
+        flashAt = performance.now();
         flash();
         renderThumbs();
         await wait(CONFIG.gapMs);
+        unfreeze();
+        liveOn = true;
       }
       await finishSession(sid);
     } catch (e) {
