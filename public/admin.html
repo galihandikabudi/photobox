@@ -87,7 +87,24 @@
   .split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
 
   /* daftar desain */
-  #list { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  #pane-desain .split { grid-template-columns: 1fr; }
+  #pane-desain .split > .card:first-child { max-width: 640px; }
+  .gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+  .gal .empty { grid-column: 1 / -1; }
+  .tile { display: flex; flex-direction: column; gap: 8px; padding: 10px; text-align: left; background: rgba(0,0,0,.22); border: 1px solid var(--line);
+    border-radius: 14px; color: inherit; font: inherit; cursor: pointer; transition: transform .15s, border-color .15s; box-shadow: none; }
+  .tile:hover, .tile:focus-visible { transform: translateY(-2px); border-color: var(--accent); }
+  .tile .tp { height: 230px; border-radius: 8px; background: #0b1238; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .tile .tp img { max-width: 100%; max-height: 100%; display: block; }
+  .tile b { font-size: 13px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .tile small { font-size: 11.5px; opacity: .7; }
+  #dlg { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(5,10,35,.78); }
+  #dlg.on { display: flex; }
+  #dlg .box { width: min(560px, 100%); max-height: 92vh; overflow: auto; background: #14205f; border: 1px solid var(--line); border-radius: 18px; padding: 18px; position: relative; }
+  #dlg .item { border: 0; background: none; padding: 0; grid-template-columns: 130px 1fr; }
+  #dlg .thumb { width: 130px; height: auto; max-height: 390px; background: #0b1238; }
+  #dlg .thumb img { height: auto; object-fit: contain; }
+  #dlg .x { position: absolute; top: 8px; right: 10px; }
   .item { display: grid; grid-template-columns: 96px 1fr; gap: 16px; padding: 14px; border-radius: 14px; background: rgba(0,0,0,.2); border: 1px solid var(--line); }
   .thumb { width: 96px; height: 288px; border-radius: 8px; overflow: hidden;
     background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 16px 16px; box-shadow: 0 6px 16px rgba(0,0,0,.35); }
@@ -115,6 +132,8 @@
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; cursor: pointer; background: rgba(0,0,0,.2); }
   .chip input { accent-color: var(--accent); }
+  button.chip { color: var(--cream); font-family: inherit; box-shadow: none; }
+  button.chip.on { border-color: var(--accent); background: rgba(242,140,0,.22); }
   .ev { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: rgba(0,0,0,.2); margin-bottom: 12px; }
   .ev.act { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(242,140,0,.25); }
   .ev h3 { font-size: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -256,7 +275,8 @@
         <section class="card">
           <h2>Desain tersimpan</h2>
           <p class="sub">Perubahan tersimpan otomatis.</p>
-          <div id="list"><p class="empty">Memuat...</p></div>
+          <div id="designFilter" class="chips" style="margin-bottom:12px" hidden></div>
+          <div id="list" class="gal"><p class="empty">Memuat...</p></div>
           <p id="listMsg" class="err"></p>
         </section>
       </div>
@@ -354,6 +374,62 @@
   });
 
   /* ---------- daftar ---------- */
+  // Galeri desain: kotak-kotak, ketuk untuk mengubah / menghapus
+  let designFilterVal = 'all';
+  function openDesign(it) {
+    let dlg = document.getElementById('dlg');
+    if (!dlg) {
+      dlg = document.createElement('div');
+      dlg.id = 'dlg';
+      dlg.innerHTML = '<div class="box"><button type="button" class="ghost sm x" aria-label="Tutup">Tutup</button><div class="slot"></div></div>';
+      document.body.appendChild(dlg);
+      const close = () => { dlg.classList.remove('on'); loadList(); };
+      dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); });
+      dlg.querySelector('.x').addEventListener('click', close);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dlg.classList.contains('on')) close(); });
+    }
+    const slot = dlg.querySelector('.slot');
+    slot.innerHTML = '<h2 style="margin:0 0 12px;font-size:16px;padding-right:70px"></h2>';
+    slot.firstChild.textContent = 'Ubah desain';
+    slot.appendChild(itemRow(it));
+    dlg.classList.add('on');
+  }
+  function tile(it) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tile';
+    const tp = document.createElement('div');
+    tp.className = 'tp';
+    const img = document.createElement('img');
+    img.src = it.url; img.alt = it.name; img.loading = 'lazy';
+    tp.appendChild(img);
+    const nm = document.createElement('b');
+    nm.textContent = it.name;
+    const sm = document.createElement('small');
+    sm.textContent = layName(it.layout) + ' · ' + (it.type === 'frame' ? 'Frame' : 'Latar') + (it.showText ? ' · teks' : '');
+    b.append(tp, nm, sm);
+    b.addEventListener('click', () => openDesign(it));
+    return b;
+  }
+  function renderGallery(items) {
+    const list = $('list');
+    list.innerHTML = '';
+    const fbox = $('designFilter');
+    const present = LAYOUTS.filter((l) => items.some((it) => (it.layout || 'strip4') === l[0]));
+    fbox.hidden = present.length < 2;
+    fbox.innerHTML = '';
+    if (designFilterVal !== 'all' && !present.some((l) => l[0] === designFilterVal)) designFilterVal = 'all';
+    [['all', 'Semua (' + items.length + ')']].concat(present.map((l) => [l[0], layName(l[0]) + ' (' + items.filter((it) => (it.layout || 'strip4') === l[0]).length + ')'])).forEach(([id, label]) => {
+      const c = document.createElement('button');
+      c.type = 'button';
+      c.className = 'chip' + (designFilterVal === id ? ' on' : '');
+      c.textContent = label;
+      c.addEventListener('click', () => { designFilterVal = id; renderGallery(items); });
+      fbox.appendChild(c);
+    });
+    items.filter((it) => designFilterVal === 'all' || (it.layout || 'strip4') === designFilterVal).forEach((it) => list.appendChild(tile(it)));
+  }
+
   function itemRow(it) {
     const row = document.createElement('div');
     row.className = 'item';
@@ -458,7 +534,7 @@
         p.textContent = 'Belum ada desain yang diunggah. Kiosk memakai frame bawaan.';
         list.appendChild(p);
       } else {
-        j.items.forEach((it) => list.appendChild(itemRow(it)));
+        renderGallery(j.items);
       }
       designList = j.items;
       $('statDesign').textContent = j.items.length;

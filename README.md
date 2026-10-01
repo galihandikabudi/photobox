@@ -29,7 +29,6 @@ dan **Oranye `#F28C00`** (aksen tombol, garis, judul). Nilainya ada di bagian `:
 ```
 public/            situs statis (kiosk, ikon, pustaka QR); ini yang dipublikasikan
 functions/         backend (upload, tampil foto, halaman unduh)
-template/          frame-template.png untuk bahan desain di Canva (tidak dipublikasikan)
 wrangler.toml      konfigurasi Cloudflare (binding R2 bernama PHOTOS)
 package.json       skrip `npm run dev` dan `npm run deploy` (tanpa dependensi)
 ```
@@ -107,7 +106,7 @@ Ukuran kanvas: **1200 x 3600 px** (rasio 1:3). Ada 4 jendela foto, masing-masing
 
 Dua cara membuat jendelanya:
 
-- **Tanpa Canva Pro (disarankan):** unggah `template/frame-template.png` ke Canva sebagai gambar latar
+- **Tanpa Canva Pro (disarankan):** unggah `frame-template.png` (di paket terpisah photobox-templates) ke Canva sebagai gambar latar
   (kotak magenta = jendela foto). Desain di area biru, tapi **jangan menutupi kotak magenta**.
   Ekspor PNG biasa. Aplikasi otomatis mengubah warna magenta murni `#FF00FF` menjadi transparan.
 - **Dengan Canva Pro:** ekspor PNG dengan opsi "Latar belakang transparan", area jendela dibiarkan kosong.
@@ -167,7 +166,7 @@ Lifecycle rule R2 hanya untuk prefix `strips/`, jangan seluruh bucket, agar desa
 
 ## Template frame siap pakai
 
-Folder `template/frames/` berisi frame bertema ceria (Konfeti Pesta, Retro Film, Pastel Ceria, Neon Malam, Doodle Sekolah, Pop Sunburst). `sekolah-strip4/` memuat teks SMK Muhada di gambar (unggah dengan **Tampilkan teks: mati**). Sub-folder `strip4/ strip3/ strip2/ grid4/ grid6/` adalah versi **polos tanpa teks** untuk tiap tata letak; unggah dengan **Tampilkan teks: aktif** agar judul dan footer mengikuti teks acara. Jendela foto berwarna magenta `#FF00FF` dan otomatis dibuat transparan.
+Template frame (tema ceria, SMK Muhada, dan set Hari Batik Nasional) ada di paket terpisah **photobox-templates** agar proyek ini tetap kecil. Isinya 61 frame (5 tata letak) beserta skrip `upload.mjs` yang mengunggahnya ke kiosk (dan membuat acara Hari Batik Nasional). Lihat README di paket itu.
 
 ## Mode acara (untuk jasa sewa photobox)
 
@@ -185,7 +184,7 @@ Zip dibuat di browser (tanpa kompresi); untuk acara dengan ribuan foto, unduh da
 Di Admin → Acara → "Teks layar awal dan strip" (saat membuat atau mengedit acara) kamu bisa mengganti:
 judul besar, tulisan kecil di atas judul, label acara, sapaan, serta teks pada strip (baris 1, judul, footer 1 & 2).
 Kolom kosong = memakai teks bawaan; label acara kosong = memakai nama acara.
-Catatan: frame bawaan dan template `sekolah-strip4` sudah memuat teks di gambarnya, jadi tidak ikut berubah. Template polos (`strip4/ strip3/ ...`) memakai teks acara.
+Catatan: frame bawaan menggambar teksnya sendiri, tetapi template `sekolah` sudah memuat teks di gambarnya, jadi tidak ikut berubah. Template polos (`umum`, `batik`) memakai teks acara.
 Teks strip yang terlalu panjang otomatis dikecilkan agar muat.
 
 ### Geser untuk ganti frame
@@ -208,23 +207,8 @@ Satuan dasar: lebar strip 600 / kartu 1200, tinggi 1800; gambar akhir 2x lebih b
 
 - Kiosk menampilkan tombol pilihan tata letak di layar awal bila lebih dari satu tersedia. Geser (swipe) hanya berganti frame di dalam tata letak yang dipilih.
 - Tanpa acara aktif: Strip 4 foto + tata letak dari desain yang diunggah. Dengan acara aktif: bisa dibatasi lewat "Tata letak yang ditawarkan" pada acara (kosong = aturan tanpa acara).
-- Frame bawaan (digambar aplikasi) tersedia untuk semua tata letak; `frame.png` hanya untuk Strip 4 foto.
+- Frame bawaan (digambar aplikasi) tersedia untuk semua tata letak; `frame.png` hanya untuk Strip 4 foto. Template siap pakai untuk semua tata letak ada di paket photobox-templates.
 - Kartu dicetak satu per lembar 4x6 inci; strip dicetak 2 per lembar 4x6 (atau 1 per lembar 2x6 jika `print.sheet: 'single'`).
-
-### Unggah template sekaligus
-
-30 template polos (6 tema x 5 tata letak) bisa diunggah dengan satu perintah dari folder proyek:
-
-```
-tools/upload-templates.sh https://photobox-muhada.pages.dev smkbisa            # semua
-tools/upload-templates.sh https://photobox-muhada.pages.dev smkbisa strip4 grid6  # hanya tata letak tertentu
-```
-
-Lalu atur desain mana yang dipakai per acara di Admin → Acara.
-
-Ikon desain di pojok kanan atas membuka menu pilih desain layar penuh (kartu besar, mudah disentuh); ketuk desain untuk memilih, atau X untuk menutup.
-
-Catatan desain: antarmuka kiosk dioptimalkan untuk layar sentuh (target sentuh besar, daftar desain satu baris yang digeser menyamping, geser kiri/kanan untuk ganti frame).
 
 ## Edit teks layar depan (WYSIWYG) dan font
 
@@ -236,3 +220,9 @@ Di kiosk, aktifkan sebuah acara lalu ketuk ikon pensil di pojok kanan atas layar
 - Font teks pada strip dipilih per acara di Admin → Acara → Teks layar awal dan strip → Font (juga bisa mengatur font teks layar depan dari sana). Berlaku untuk frame bawaan dan desain unggahan yang menyalakan "Tampilkan teks".
 
 Font (Plus Jakarta Sans, Poppins, Montserrat, Playfair Display, Lobster, Pacifico, Bebas Neue, Oswald, Dancing Script, Fredoka, Caveat; lisensi SIL OFL) di-host sendiri di folder `public/fonts`, jadi kiosk tetap tampil tanpa internet.
+
+## Set Hari Batik Nasional (2 Oktober)
+
+Frame batik dan acara siap pakai ada di paket **photobox-templates**: `node upload.mjs https://photobox-muhada.pages.dev smkbisa batik`.
+
+Tab Desain strip di admin menampilkan desain tersimpan sebagai galeri kotak-kotak (bisa disaring per tata letak). Ketuk kotak untuk mengubah nama, tata letak, jenis, teks, atau menghapus.
