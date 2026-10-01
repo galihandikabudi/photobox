@@ -275,10 +275,43 @@
   }
 
   [hidden] { display: none !important; }
+
+  /* Layar pemuatan awal (CSS murni agar langsung tampil, tanpa menunggu font/skrip) */
+  #boot { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 40%, #1b2d7a 0%, #0E1745 70%); color: #fff8e7; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    transition: opacity .45s ease, visibility .45s; }
+  #boot.done { opacity: 0; visibility: hidden; pointer-events: none; }
+  .boot-in { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+  .boot-cam { position: relative; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; }
+  .boot-cam svg { width: 84px; height: 84px; fill: none; stroke: #F28C00; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; animation: bootBob 1.8s ease-in-out infinite; }
+  .boot-cam .boot-lens { fill: #FFD23F; stroke: none; transform-origin: 32px 35px; animation: bootFlash 1.8s ease-in-out infinite; }
+  .boot-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid rgba(242,140,0,.7); animation: bootRing 2s ease-out infinite; }
+  .boot-ring.r2 { animation-delay: 1s; }
+  .boot-t { font-size: clamp(20px, 3.2vw, 30px); font-weight: 700; letter-spacing: .5px; }
+  .boot-dots { display: flex; gap: 12px; }
+  .boot-dots i { width: 14px; height: 14px; border-radius: 50%; background: #F28C00; animation: bootDot 1.2s ease-in-out infinite; }
+  .boot-dots i:nth-child(2) { animation-delay: .15s; background: #FFB13D; }
+  .boot-dots i:nth-child(3) { animation-delay: .3s; background: #FFD23F; }
+  @keyframes bootRing { 0% { transform: scale(.55); opacity: .9; } 100% { transform: scale(1.25); opacity: 0; } }
+  @keyframes bootBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @keyframes bootFlash { 0%,70%,100% { transform: scale(1); opacity: 1; } 80% { transform: scale(1.7); opacity: .6; } 90% { transform: scale(.8); opacity: 1; } }
+  @keyframes bootDot { 0%,80%,100% { transform: translateY(0) scale(.8); opacity: .5; } 40% { transform: translateY(-14px) scale(1.1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .boot-ring, .boot-cam svg, .boot-lens, .boot-dots i { animation-duration: 3.5s; } }
 </style>
 
 </head>
 <body>
+
+<div id="boot" role="status" aria-live="polite">
+  <div class="boot-in">
+    <div class="boot-cam">
+      <span class="boot-ring"></span><span class="boot-ring r2"></span>
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="16" width="52" height="38" rx="9"/><path d="M22 16l4-7h12l4 7"/><circle cx="32" cy="35" r="11"/><circle class="boot-lens" cx="32" cy="35" r="5"/></svg>
+    </div>
+    <div class="boot-t">Memuat photobox</div>
+    <div class="boot-dots"><i></i><i></i><i></i></div>
+  </div>
+</div>
 
 <div id="stage">
 
@@ -1673,7 +1706,17 @@
   // Siapkan kamera, frame, dan daftar desain lebih awal agar mulai terasa cepat
   initCamera();
   getFrame();
-  loadDesigns();
+  // Tutup layar pemuatan setelah desain, font, dan data acara siap (paling lama 8 detik)
+  const bootT0 = Date.now();
+  const hideBoot = () => {
+    const b = $('boot'); if (!b || b.classList.contains('done')) return;
+    setTimeout(() => { b.classList.add('done'); setTimeout(() => b.remove(), 700); }, Math.max(0, 600 - (Date.now() - bootT0)));
+  };
+  Promise.all([
+    loadDesigns().catch(() => {}),
+    (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).catch(() => {})
+  ]).then(hideBoot);
+  setTimeout(hideBoot, 8000);
 })();
 </script>
 </body>
