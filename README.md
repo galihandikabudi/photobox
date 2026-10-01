@@ -223,3 +223,16 @@ tools/upload-templates.sh https://photobox-muhada.pages.dev smkbisa strip4 grid6
 Lalu atur desain mana yang dipakai per acara di Admin → Acara.
 
 Ikon desain di pojok kanan atas membuka menu pilih desain layar penuh (kartu besar, mudah disentuh); ketuk desain untuk memilih, atau X untuk menutup.
+
+Catatan desain: antarmuka kiosk dioptimalkan untuk layar sentuh (target sentuh besar, daftar desain satu baris yang digeser menyamping, geser kiri/kanan untuk ganti frame).
+
+## Edit teks layar depan (WYSIWYG) dan font
+
+Di kiosk, aktifkan sebuah acara lalu ketuk ikon pensil di pojok kanan atas layar depan (diminta kata sandi admin; tersimpan selama tab terbuka). Teks layar depan jadi bisa diedit langsung:
+
+- Ketuk teks (baris kecil, nama acara, judul PHOTOBOX, keterangan) lalu ketik.
+- Bilah di bawah layar: pilih font (11 pilihan, tiap nama tampil dengan fontnya), perbesar/perkecil (A− A+), tebal (B), miring (I), warna (palet + pemilih warna), Reset gaya, Batal, Simpan.
+- Perubahan disimpan ke acara yang sedang aktif (kolom judul, baris kecil, label acara, sapaan, dan gaya). Teks yang dikosongkan atau sama dengan bawaan kembali memakai teks bawaan.
+- Font teks pada strip dipilih per acara di Admin → Acara → Teks layar awal dan strip → Font (juga bisa mengatur font teks layar depan dari sana). Berlaku untuk frame bawaan dan desain unggahan yang menyalakan "Tampilkan teks".
+
+Font (Plus Jakarta Sans, Poppins, Montserrat, Playfair Display, Lobster, Pacifico, Bebas Neue, Oswald, Dancing Script, Fredoka, Caveat; lisensi SIL OFL) di-host sendiri di folder `public/fonts`, jadi kiosk tetap tampil tanpa internet.

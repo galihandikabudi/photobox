@@ -8,9 +8,7 @@
 <title>Photobox SMK Muhada</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts/fonts.css">
 <style>
   /* Seluruh tampilan digambar pada kanvas tetap 1920 x 1080 (16:9) lalu diskalakan
      seragam ke layar perangkat oleh JavaScript (lihat fitStage). Semua ukuran di bawah
@@ -125,6 +123,40 @@
   .hero-strip::after { content: ""; position: absolute; inset: -60px -70px; z-index: -1;
     background: radial-gradient(closest-side, rgba(26,111,232,.5), transparent); }
 
+  /* ---------- mode edit teks ---------- */
+  .editing #btnEdit, .editing #btnStart, .editing .hero-col, .editing .laybar, .editing #btnFs, .editing #btnDesign { pointer-events: none; opacity: .35; }
+  .editing .hero-text > * { transition: opacity .2s; }
+  [data-ed] { border-radius: 10px; }
+  .editing [data-ed] { outline: 3px dashed rgba(255,255,255,.45); outline-offset: 8px; cursor: text; -webkit-user-select: text; user-select: text; caret-color: var(--accent); }
+  .editing [data-ed].ed-sel { outline: 4px solid var(--accent); }
+  .editing [data-ed]:empty::before { content: attr(data-ph); opacity: .5; }
+  .editing #heroTitle { -webkit-text-fill-color: currentColor; background: none; }
+  .custom-color { background: none !important; -webkit-text-fill-color: currentColor !important; }
+  #editBar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 7; display: none; flex-direction: column; gap: 14px;
+    padding: 18px 32px 22px; background: rgba(10,18,56,.97); border-top: 2px solid var(--line); box-shadow: 0 -20px 50px rgba(0,0,0,.5); }
+  .editing #editBar { display: flex; }
+  .ed-row { display: flex; align-items: center; gap: 14px; }
+  .ed-label { flex: none; font-size: 24px; font-weight: 800; color: var(--accent-2); min-width: 150px; }
+  .ed-fonts { flex: 1; min-width: 0; display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px; touch-action: pan-x; scrollbar-width: none; }
+  .ed-fonts::-webkit-scrollbar { display: none; }
+  .fchip { flex: none; padding: 12px 26px; border-radius: 16px; font-size: 30px; line-height: 1.1; background: var(--glass); border: 2px solid var(--line); color: #fff; box-shadow: none; font-weight: 400; }
+  .fchip.sel { border-color: var(--accent); background: rgba(242,140,0,.22); }
+  .ed-btn { flex: none; min-width: 68px; height: 68px; padding: 0 20px; font-size: 30px; font-weight: 800; border-radius: 18px; }
+  .ed-btn.sel { border-color: var(--accent); background: rgba(242,140,0,.22); }
+  .ed-pct { flex: none; width: 96px; text-align: center; font-size: 26px; font-weight: 800; }
+  .sw { flex: none; width: 56px; height: 56px; border-radius: 50%; border: 3px solid rgba(255,255,255,.55); padding: 0; box-shadow: none; }
+  .sw.sel { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(242,140,0,.45); }
+  .sw.none { background: linear-gradient(135deg, transparent 45%, #ff6b6b 45%, #ff6b6b 55%, transparent 55%) #2a3a7a; }
+  input.sw { -webkit-appearance: none; appearance: none; background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); cursor: pointer; }
+  input.sw::-webkit-color-swatch-wrapper { padding: 0; opacity: 0; }
+  .ed-sp { flex: 1; }
+  #editLogin { position: absolute; inset: 0; z-index: 8; display: none; align-items: center; justify-content: center; background: rgba(8,14,44,.85); }
+  #editLogin.on { display: flex; }
+  #editLogin input { width: 520px; font-size: 34px; padding: 16px 24px; border-radius: 16px; border: 2px solid var(--line); background: rgba(255,255,255,.08); color: #fff; text-align: center; }
+  #toast { position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); z-index: 9; background: rgba(8,14,44,.95); border: 2px solid var(--accent);
+    padding: 16px 34px; border-radius: 999px; font-size: 26px; font-weight: 700; opacity: 0; pointer-events: none; transition: opacity .3s; }
+  #toast.on { opacity: 1; }
+
   /* panel pilih desain */
   #pickerWrap {
     position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column;
@@ -134,8 +166,11 @@
   .pick-head { text-align: left; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 28px 28px 8px 64px; }
   .pick-label { font-size: 44px; font-weight: 800; }
   .pick-sub { font-size: 24px; opacity: .7; font-weight: 600; margin-top: 4px; }
-  .picker { flex: 1; min-height: 0; display: flex; flex-wrap: wrap; gap: 26px 30px; justify-content: center; align-content: flex-start;
-    overflow-y: auto; padding: 24px 64px 40px; -webkit-overflow-scrolling: touch; }
+  .picker { flex: 1; min-height: 0; display: flex; flex-wrap: nowrap; gap: 34px; justify-content: safe center; align-items: center;
+    overflow-x: auto; overflow-y: hidden; padding: 10px 80px 50px; touch-action: pan-x; overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .picker::-webkit-scrollbar { display: none; }
+  .picker .dz { scroll-snap-align: center; }
   .dz {
     flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px;
     border: 4px solid transparent; border-radius: 16px; background: transparent; color: var(--cream);
@@ -144,7 +179,7 @@
   .dz.sel { border-color: var(--accent); background: rgba(255,255,255,.1); }
   .dz.bad { opacity: .4; }
   .dz canvas { border-radius: 8px; background: #fff; display: block; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
-  .dz span { width: 100%; text-align: center; font-size: 22px; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .dz span { width: 100%; text-align: center; font-size: 22px; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; font-size: 26px; -webkit-box-orient: vertical; overflow: hidden; }
 
   /* ---------- foto ---------- */
   #s-shoot { flex-direction: row; justify-content: center; align-items: center; gap: 90px; padding: 24px 40px; }
@@ -249,6 +284,9 @@
 
 <section id="s-start" class="screen active">
   <div class="toolbar">
+    <button id="btnEdit" class="icon-btn ghost" type="button" title="Edit teks layar depan" aria-label="Edit teks layar depan">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>
+    </button>
     <button id="btnDesign" class="icon-btn ghost" type="button" title="Pilih desain strip" aria-label="Pilih desain strip" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="1.5"/><rect x="9.5" y="5" width="5" height="3"/><rect x="9.5" y="9.5" width="5" height="3"/><rect x="9.5" y="14" width="5" height="3"/></svg>
     </button>
@@ -264,10 +302,10 @@
     <div id="picker" class="picker"></div>
   </div>
   <div class="hero-text">
-    <div class="brand"><img src="icon-192.png" alt=""><div class="badge" id="brandLine">SMK MUHAMMADIYAH TODANAN</div></div>
-    <div id="evBadge" class="evb" hidden></div>
-    <h1 id="heroTitle">PHOTOBOX</h1>
-    <p class="sub" id="heroSub">Abadikan momenmu. Foto-foto seru langsung jadi satu hasil berframe, siap dibawa pulang.</p>
+    <div class="brand"><img src="icon-192.png" alt=""><div class="badge" id="brandLine" data-ed="brandLine" data-ph="Baris kecil di atas judul">SMK MUHAMMADIYAH TODANAN</div></div>
+    <div id="evBadge" class="evb" data-ed="badge" data-ph="Nama acara" hidden></div>
+    <h1 id="heroTitle" data-ed="title" data-ph="Judul">PHOTOBOX</h1>
+    <p class="sub" id="heroSub" data-ed="sub" data-ph="Keterangan acara">Abadikan momenmu. Foto-foto seru langsung jadi satu hasil berframe, siap dibawa pulang.</p>
     <div id="layBar" class="laybar" hidden></div>
     <div class="steps">
       <div class="step"><b>1</b><span id="stepShots">Ambil 4 foto</span></div>
@@ -281,6 +319,24 @@
     <p id="camMsg" class="msg"></p>
     <button id="btnCamRetry" class="ghost" hidden>Coba lagi</button>
     <p class="notice" id="privacy"></p>
+  </div>
+  <div id="editBar">
+    <div class="ed-row">
+      <span class="ed-label" id="edLabel">Judul</span>
+      <div class="ed-fonts" id="edFonts"></div>
+    </div>
+    <div class="ed-row">
+      <button class="ghost ed-btn" id="edMinus" type="button" aria-label="Perkecil">A−</button>
+      <span class="ed-pct" id="edPct">100%</span>
+      <button class="ghost ed-btn" id="edPlus" type="button" aria-label="Perbesar">A+</button>
+      <button class="ghost ed-btn" id="edBold" type="button" aria-label="Tebal" style="font-weight:800">B</button>
+      <button class="ghost ed-btn" id="edItalic" type="button" aria-label="Miring" style="font-style:italic;font-family:serif">I</button>
+      <span id="edColors" class="ed-row" style="gap:10px"></span>
+      <span class="ed-sp"></span>
+      <button class="ghost ed-btn" id="edReset" type="button" style="font-size:22px">Reset gaya</button>
+      <button class="ghost ed-btn" id="edCancel" type="button" style="font-size:24px">Batal</button>
+      <button class="ed-btn" id="edSave" type="button" style="font-size:24px">Simpan</button>
+    </div>
   </div>
   <div class="hero-col">
     <div class="hero-strip"><canvas id="heroStrip" width="300" height="900"></canvas></div>
@@ -350,6 +406,19 @@
   </div>
 </section>
 
+  <div id="toast"></div>
+  <div id="editLogin">
+    <div class="dialog">
+      <h2>Mode edit teks</h2>
+      <p>Masukkan kata sandi admin.</p>
+      <input id="edPw" type="password" autocomplete="off" placeholder="Kata sandi">
+      <p id="edPwMsg" class="msg"></p>
+      <div class="row">
+        <button id="edPwOk" type="button">Masuk</button>
+        <button id="edPwNo" class="ghost" type="button">Batal</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="printSheet" aria-hidden="true"></div>
@@ -445,11 +514,62 @@
   let selected = BUILTIN;
   let loadSeq = 0;
 
+
+  /* ====================== FONT & GAYA TEKS LAYAR DEPAN ====================== */
+  const FONTS = [
+    ['jakarta', 'Plus Jakarta Sans'], ['poppins', 'Poppins'], ['montserrat', 'Montserrat'], ['playfair', 'Playfair Display'],
+    ['lobster', 'Lobster'], ['pacifico', 'Pacifico'], ['bebas', 'Bebas Neue'], ['oswald', 'Oswald'],
+    ['dancing', 'Dancing Script'], ['fredoka', 'Fredoka'], ['caveat', 'Caveat']
+  ];
+  const FONT_NAME = Object.fromEntries(FONTS);
+  const STYLE_EL = { brandLine: 'brandLine', badge: 'evBadge', title: 'heroTitle', sub: 'heroSub' };
+  const STYLE_LABEL = { brandLine: 'Baris kecil', badge: 'Nama acara', title: 'Judul', sub: 'Keterangan' };
+  const TEXT_MAX = { brandLine: 40, badge: 40, title: 24, sub: 140 };
+  const BASE_PX = {};   // ukuran bawaan tiap teks (px), dibaca dari CSS
+  Object.keys(STYLE_EL).forEach((k) => { BASE_PX[k] = parseFloat(getComputedStyle($(STYLE_EL[k])).fontSize) || 24; });
+  const BASE_WEIGHT = {};
+  Object.keys(STYLE_EL).forEach((k) => { BASE_WEIGHT[k] = getComputedStyle($(STYLE_EL[k])).fontWeight; });
+  const SYS = ', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+
+  function applyStyles(styles) {
+    const st = styles || {};
+    Object.keys(STYLE_EL).forEach((k) => {
+      const el = $(STYLE_EL[k]);
+      const o = st[k] || {};
+      el.style.fontFamily = o.font && FONT_NAME[o.font] && o.font !== 'jakarta' ? '"' + FONT_NAME[o.font] + '"' + SYS : '';
+      el.style.fontSize = o.size && o.size !== 1 ? (BASE_PX[k] * o.size).toFixed(1) + 'px' : '';
+      el.style.color = o.color || '';
+      el.classList.toggle('custom-color', !!o.color);
+      el.style.fontWeight = typeof o.bold === 'boolean' ? (o.bold ? '800' : '400') : '';
+      el.style.fontStyle = o.italic === true ? 'italic' : (o.italic === false ? 'normal' : '');
+    });
+  }
+
+  // Font teks pada strip (pengaturan acara). Harus termuat sebelum digambar ke kanvas.
+  const stripFontId = () => {
+    const f = curEv && curEv.styles && curEv.styles.strip && curEv.styles.strip.font;
+    return f && FONT_NAME[f] && f !== 'jakarta' ? f : '';
+  };
+  const stripFam = () => (stripFontId() ? '"' + FONT_NAME[stripFontId()] + '"' : '') + (stripFontId() ? ', ' : '') + 'system-ui, sans-serif';
+  async function ensureStripFont() {
+    const id = stripFontId();
+    if (!id || !document.fonts) return;
+    try {
+      await Promise.all(['600', '700', '800'].map((w) => document.fonts.load(w + ' 40px "' + FONT_NAME[id] + '"')));
+    } catch (e) { /* pakai font cadangan */ }
+  }
+  function prepStripFont() {
+    if (!stripFontId()) return;
+    ensureStripFont().then(() => { renderHero(); });
+  }
+
   const DEFAULT_SUB = $('heroSub').textContent;
   const DEFAULT_TITLE = $('heroTitle').textContent;
   const DEFAULT_LINE = $('brandLine').textContent;
   const DEFAULT_BRAND = Object.assign({}, CONFIG.brand);
+  let curEv = null;
   function applyEvent(ev) {
+    curEv = ev;
     CONFIG.brand = {
       line1: (ev && ev.stripLine1) || DEFAULT_BRAND.line1,
       title: (ev && ev.stripTitle) || DEFAULT_BRAND.title,
@@ -465,6 +585,8 @@
     $('evBadge').hidden = !ev;
     $('evBadge').textContent = ev ? (ev.badge || ev.name) : '';
     $('heroSub').textContent = ev && ev.welcome ? ev.welcome : DEFAULT_SUB;
+    applyStyles(ev ? ev.styles : null);
+    prepStripFont();
   }
   applyEvent(null);
 
@@ -575,6 +697,7 @@
     const W = Math.round(LAY.w * PREV_K);
     const H = Math.round(LAY.h * PREV_K);
     sizeShootUI();
+    await ensureStripFont();
     let d = selected;
     try {
       prevLayers = await layersFor(d, W, H);
@@ -734,17 +857,17 @@
     x.strokeRect(12, 12, W - 24, H - 24);
     x.textAlign = 'center';
     x.fillStyle = '#F28C00';
-    x.font = '700 27px system-ui, sans-serif';
+    x.font = '700 27px ' + stripFam();
     x.fillText(B.line1, W / 2, 68);
     x.fillStyle = '#fff8e7';
-    x.font = '800 72px system-ui, sans-serif';
+    x.font = '800 72px ' + stripFam();
     x.fillText(B.title, W / 2, 142);
     const footTop = L.footTop;
     x.fillStyle = '#F28C00';
-    x.font = '800 40px system-ui, sans-serif';
+    x.font = '800 40px ' + stripFam();
     x.fillText(B.footer1, W / 2, footTop + 62);
     x.fillStyle = '#fff8e7';
-    x.font = '600 28px system-ui, sans-serif';
+    x.font = '600 28px ' + stripFam();
     x.fillText(B.footer2, W / 2, footTop + 104);
     for (const sl of L.slots) {
       x.clearRect(sl.x, sl.y, sl.w, sl.h);
@@ -758,8 +881,10 @@
   const framePromises = {};
   function getFrame() {
     const L = LAY;
-    if (!framePromises[L.id]) {
-      framePromises[L.id] = (async () => {
+    const fkey = L.id + '|' + JSON.stringify(CONFIG.brand) + '|' + stripFontId();
+    if (!framePromises[fkey]) {
+      framePromises[fkey] = (async () => {
+        await ensureStripFont();
         try {
           if (L.id !== 'strip4') throw new Error('frame.png hanya untuk strip 4 foto');
           const img = await loadImage(CONFIG.frameUrl + '?v=' + Date.now());
@@ -771,7 +896,7 @@
         }
       })();
     }
-    return framePromises[L.id];
+    return framePromises[fkey];
   }
 
   const imgCache = new Map();    // id desain -> Promise<Image>
@@ -838,10 +963,10 @@
       ctx.fillStyle = fill;
       ctx.fillText(t, W / 2, y);
     };
-    put(B.line1, 68, '700 27px system-ui, sans-serif', '#F28C00');
-    put(B.title, 142, '800 72px system-ui, sans-serif', '#fff8e7');
-    put(B.footer1, footTop + 62, '800 40px system-ui, sans-serif', '#F28C00');
-    put(B.footer2, footTop + 104, '600 28px system-ui, sans-serif', '#fff8e7');
+    put(B.line1, 68, '700 27px ' + stripFam(), '#F28C00');
+    put(B.title, 142, '800 72px ' + stripFam(), '#fff8e7');
+    put(B.footer1, footTop + 62, '800 40px ' + stripFam(), '#F28C00');
+    put(B.footer2, footTop + 104, '600 28px ' + stripFam(), '#fff8e7');
     ctx.restore();
   }
 
@@ -874,6 +999,7 @@
   async function composeStrip() {
     const W = LAY.w * S;
     const H = LAY.h * S;
+    await ensureStripFont();
     const c = document.createElement('canvas');
     c.width = W;
     c.height = H;
@@ -952,7 +1078,11 @@
     const show = typeof open === 'boolean' ? open : w.hidden;
     w.hidden = !show;
     $('btnDesign').classList.toggle('on', show);
-    if (show) $('pickSub').textContent = LAY.name;
+    if (show) {
+      $('pickSub').textContent = LAY.name;
+      const sel = document.querySelector('#picker .dz.sel');
+      if (sel) sel.scrollIntoView({ inline: 'center', block: 'nearest' });
+    }
   }
 
   function renderPicker() {
@@ -968,7 +1098,7 @@
       b.className = 'dz';
       b.dataset.id = d.id;
       const c = document.createElement('canvas');
-      const tw = LAY.strip ? 170 : 280;
+      const tw = LAY.strip ? 230 : 400;
       c.width = tw * 2;
       c.height = Math.round(tw * 2 * LAY.h / LAY.w);
       c.style.width = tw + 'px';
@@ -1074,6 +1204,182 @@
     computeLayouts();
     setLayout(allowedLayouts.includes(LAY.id) ? LAY.id : allowedLayouts[0]);
   }
+
+  /* ====================== MODE EDIT TEKS (layar depan) ====================== */
+  let toastTimer = null;
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('on'), 2800);
+  }
+  const PW_KEY = 'photobox-edit-pw';
+  const getPw = () => { try { return sessionStorage.getItem(PW_KEY) || ''; } catch (e) { return ''; } };
+  const setPw = (v) => { try { if (v) sessionStorage.setItem(PW_KEY, v); else sessionStorage.removeItem(PW_KEY); } catch (e) { /* abaikan */ } };
+  const COLORS = ['#ffffff', '#F28C00', '#FFD23F', '#FF5D8F', '#3DDAD7', '#7BE495', '#1A6FE8', '#0E1745'];
+  let ed = null;   // { key, styles }
+
+  const edEls = () => Object.keys(STYLE_EL).map((k) => [k, $(STYLE_EL[k])]);
+  const edCur = () => { if (!ed.styles[ed.key]) ed.styles[ed.key] = {}; return ed.styles[ed.key]; };
+
+  function edRefresh() {
+    const o = ed.styles[ed.key] || {};
+    $('edLabel').textContent = STYLE_LABEL[ed.key];
+    edEls().forEach(([k, el]) => el.classList.toggle('ed-sel', k === ed.key));
+    $('edFonts').querySelectorAll('.fchip').forEach((b) => b.classList.toggle('sel', b.dataset.id === (o.font || 'jakarta')));
+    const fs = $('edFonts').querySelector('.fchip.sel');
+    if (fs) $('edFonts').scrollLeft = fs.offsetLeft - ($('edFonts').clientWidth - fs.offsetWidth) / 2;
+    $('edPct').textContent = Math.round((o.size || 1) * 100) + '%';
+    const bold = typeof o.bold === 'boolean' ? o.bold : parseInt(BASE_WEIGHT[ed.key], 10) >= 600;
+    $('edBold').classList.toggle('sel', bold);
+    $('edItalic').classList.toggle('sel', o.italic === true);
+    $('edColors').querySelectorAll('.sw').forEach((b) => b.classList.toggle('sel', (b.dataset.c || '') === (o.color || '')));
+  }
+  function edChange(fn) {
+    fn(edCur());
+    if (!Object.keys(ed.styles[ed.key]).length) delete ed.styles[ed.key];
+    applyStyles(ed.styles);
+    edRefresh();
+  }
+  function edSelect(key) { if (!ed) return; ed.key = key; edRefresh(); }
+
+  (function buildEdBar() {
+    const box = $('edFonts');
+    FONTS.forEach(([id, name]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'fchip';
+      b.dataset.id = id;
+      b.textContent = name;
+      b.style.fontFamily = '"' + name + '"' + SYS;
+      b.addEventListener('click', () => edChange((o) => { if (id === 'jakarta') delete o.font; else o.font = id; }));
+      box.appendChild(b);
+    });
+    const cb = $('edColors');
+    const none = document.createElement('button');
+    none.type = 'button'; none.className = 'sw none'; none.dataset.c = ''; none.setAttribute('aria-label', 'Warna bawaan');
+    none.addEventListener('click', () => edChange((o) => { delete o.color; }));
+    cb.appendChild(none);
+    COLORS.forEach((c) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'sw'; b.dataset.c = c.toLowerCase(); b.style.background = c; b.setAttribute('aria-label', 'Warna ' + c);
+      b.addEventListener('click', () => edChange((o) => { o.color = c.toLowerCase(); }));
+      cb.appendChild(b);
+    });
+    const pick = document.createElement('input');
+    pick.type = 'color'; pick.className = 'sw'; pick.value = '#ffffff'; pick.setAttribute('aria-label', 'Warna lain');
+    pick.addEventListener('input', () => edChange((o) => { o.color = pick.value.toLowerCase(); }));
+    cb.appendChild(pick);
+
+    $('edMinus').addEventListener('click', () => edChange((o) => { o.size = Math.max(0.5, Math.round(((o.size || 1) - 0.1) * 100) / 100); if (o.size === 1) delete o.size; }));
+    $('edPlus').addEventListener('click', () => edChange((o) => { o.size = Math.min(2, Math.round(((o.size || 1) + 0.1) * 100) / 100); if (o.size === 1) delete o.size; }));
+    $('edBold').addEventListener('click', () => edChange((o) => {
+      const cur = typeof o.bold === 'boolean' ? o.bold : parseInt(BASE_WEIGHT[ed.key], 10) >= 600;
+      o.bold = !cur;
+    }));
+    $('edItalic').addEventListener('click', () => edChange((o) => { if (o.italic) delete o.italic; else o.italic = true; }));
+    $('edReset').addEventListener('click', () => { delete ed.styles[ed.key]; applyStyles(ed.styles); edRefresh(); });
+    $('edCancel').addEventListener('click', () => leaveEdit(true));
+    $('edSave').addEventListener('click', saveEdit);
+
+    edEls().forEach(([k, el]) => {
+      el.addEventListener('focus', () => edSelect(k));
+      el.addEventListener('pointerdown', () => edSelect(k));
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+      el.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const t = ((e.clipboardData || window.clipboardData).getData('text') || '').replace(/\s+/g, ' ');
+        document.execCommand('insertText', false, t);
+      });
+      el.addEventListener('input', () => {
+        const t = el.textContent.replace(/\s+/g, ' ');
+        if (t.length > TEXT_MAX[k]) {
+          el.textContent = t.slice(0, TEXT_MAX[k]);
+          const r = document.createRange(); r.selectNodeContents(el); r.collapse(false);
+          const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        }
+      });
+    });
+  })();
+
+  function enterEdit() {
+    ed = { key: 'title', styles: JSON.parse(JSON.stringify((curEv && curEv.styles) || {})) };
+    $('s-start').classList.add('editing');
+    togglePicker(false);
+    edEls().forEach(([, el]) => { el.contentEditable = 'true'; el.spellcheck = false; });
+    const b = $('evBadge');
+    b.hidden = false;
+    b.textContent = curEv.badge || curEv.name || '';
+    edRefresh();
+  }
+  function leaveEdit(restore) {
+    $('s-start').classList.remove('editing');
+    edEls().forEach(([, el]) => { el.contentEditable = 'false'; el.classList.remove('ed-sel'); });
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    ed = null;
+    if (restore) applyEvent(curEv);
+  }
+
+  async function saveEdit() {
+    const val = (k, def) => { const t = $(STYLE_EL[k]).textContent.replace(/\s+/g, ' ').trim(); return t === def ? '' : t; };
+    const badgeNow = $('evBadge').textContent.replace(/\s+/g, ' ').trim();
+    const body = {
+      title: val('title', DEFAULT_TITLE),
+      brandLine: val('brandLine', DEFAULT_LINE),
+      welcome: val('sub', DEFAULT_SUB),
+      badge: badgeNow === curEv.name ? '' : badgeNow,
+      styles: ed.styles
+    };
+    $('edSave').disabled = true;
+    try {
+      const r = await fetch('/api/admin/events/' + curEv.id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + getPw() },
+        body: JSON.stringify(body)
+      });
+      if (r.status === 401 || r.status === 403 || r.status === 429) { setPw(''); leaveEdit(true); toast('Kata sandi tidak berlaku. Coba masuk lagi.'); return; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      leaveEdit(false);
+      await loadDesigns();
+      toast('Tersimpan untuk acara "' + curEv.name + '"');
+    } catch (e) {
+      toast('Gagal menyimpan. Periksa koneksi lalu coba lagi.');
+    } finally {
+      $('edSave').disabled = false;
+    }
+  }
+
+  async function checkPw(pw) {
+    try {
+      const r = await fetch('/api/admin/ping', { headers: { Authorization: 'Bearer ' + pw } });
+      return r.ok;
+    } catch (e) { return false; }
+  }
+  function openLogin(on) {
+    $('editLogin').classList.toggle('on', on);
+    $('edPwMsg').textContent = '';
+    $('edPw').value = '';
+    if (on) setTimeout(() => $('edPw').focus(), 50);
+  }
+  async function submitLogin() {
+    const pw = $('edPw').value;
+    if (!pw) return;
+    $('edPwOk').disabled = true;
+    const ok = await checkPw(pw);
+    $('edPwOk').disabled = false;
+    if (!ok) { $('edPwMsg').textContent = 'Kata sandi salah.'; return; }
+    setPw(pw);
+    openLogin(false);
+    enterEdit();
+  }
+  $('btnEdit').addEventListener('click', () => {
+    if (!curEv) { toast('Aktifkan sebuah acara di Admin dulu untuk mengedit teks.'); return; }
+    if (getPw()) enterEdit(); else openLogin(true);
+  });
+  $('edPwOk').addEventListener('click', submitLogin);
+  $('edPwNo').addEventListener('click', () => openLogin(false));
+  $('edPw').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitLogin(); });
 
   /* ====================== UNGGAH & QR ====================== */
   async function uploadBlob(blob) {
@@ -1318,6 +1624,7 @@
   $('btnResume').addEventListener('click', () => { paused = false; showConfirm(false); });
   $('btnCancelYes').addEventListener('click', () => { showConfirm(false); cancelSession(); });
   $('btnDesign').addEventListener('click', (e) => { e.stopPropagation(); togglePicker(true); });
+  $('picker').addEventListener('wheel', (e) => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.currentTarget.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
   $('btnPickClose').addEventListener('click', () => togglePicker(false));
   $('dPrev').addEventListener('click', () => stepDesign(-1));
   $('dNext').addEventListener('click', () => stepDesign(1));
@@ -1326,7 +1633,7 @@
     const el = $('s-start');
     let sx = 0, sy = 0, st = 0, on = false;
     el.addEventListener('pointerdown', (e) => {
-      on = !e.target.closest('#pickerWrap, button');
+      on = !e.target.closest('#pickerWrap, button') && !el.classList.contains('editing');
       sx = e.clientX; sy = e.clientY; st = Date.now();
     });
     el.addEventListener('pointerup', (e) => {
@@ -1337,7 +1644,7 @@
     });
     el.addEventListener('pointercancel', () => { on = false; });
     document.addEventListener('keydown', (e) => {
-      if (!el.classList.contains('active')) return;
+      if (!el.classList.contains('active') || el.classList.contains('editing')) return;
       if (e.key === 'ArrowLeft') stepDesign(-1);
       else if (e.key === 'ArrowRight') stepDesign(1);
     });
@@ -1352,6 +1659,9 @@
   });
   document.addEventListener('contextmenu', (e) => e.preventDefault());
   document.addEventListener('keydown', (e) => {
+    const t = e.target;
+    const typing = $('s-start').classList.contains('editing') || $('editLogin').classList.contains('on') || (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)));
+    if (typing) return;
     if ((e.key === 'Enter' || e.key === ' ') && $('s-start').classList.contains('active')) {
       e.preventDefault();
       startSession();

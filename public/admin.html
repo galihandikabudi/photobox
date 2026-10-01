@@ -7,9 +7,7 @@
 <meta name="theme-color" content="#0E1745">
 <title>Admin Photobox SMK Muhada</title>
 <link rel="icon" href="icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/fonts/fonts.css">
 <style>
   :root {
     --navy: #0E1745; --dark: #1B2E6E; --blue: #1A6FE8; --accent: #F28C00; --accent-2: #FFB13D; --cream: #fff8e7;
@@ -112,6 +110,8 @@
 
   details.more { margin-top: 14px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; background: rgba(0,0,0,.15); }
   details.more summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+  .fontgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px 14px; }
+  .fontrow { display: flex; flex-direction: column; gap: 4px; font-size: 13px; opacity: .95; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; cursor: pointer; background: rgba(0,0,0,.2); }
   .chip input { accent-color: var(--accent); }
@@ -202,7 +202,10 @@
             <input id="evS3" type="text" maxlength="30">
             <label for="evS4">Teks bawah 2 pada strip</label>
             <input id="evS4" type="text" maxlength="30">
-            <p class="hint">Teks strip hanya tampil pada desain unggahan dengan "Tampilkan teks" menyala. Frame bawaan dan template frame memiliki teks di dalam gambarnya.</p>
+            <p class="hint">Teks strip tampil pada frame bawaan dan pada desain unggahan dengan "Tampilkan teks" menyala. Frame yang memuat teks di dalam gambarnya tidak ikut berubah.</p>
+            <label>Font teks layar depan</label>
+            <div class="fontgrid" id="evFonts"></div>
+            <p class="hint">Isi, ukuran, warna, dan tebal/miring teks layar depan paling mudah diatur langsung di kiosk: aktifkan acara, lalu ketuk ikon pensil di layar depan.</p>
           </details>
           <label>Desain yang tersedia</label>
           <div id="evDesigns" class="chips"></div>
@@ -636,6 +639,40 @@
   let evData = { events: [], active: null, noEvent: { count: 0, bytes: 0 } };
   let designList = [];
 
+  const FONTS = [['jakarta', 'Plus Jakarta Sans (bawaan)'], ['poppins', 'Poppins'], ['montserrat', 'Montserrat'], ['playfair', 'Playfair Display'],
+    ['lobster', 'Lobster'], ['pacifico', 'Pacifico'], ['bebas', 'Bebas Neue'], ['oswald', 'Oswald'], ['dancing', 'Dancing Script'], ['fredoka', 'Fredoka'], ['caveat', 'Caveat']];
+  const FONT_FOR = [['title', 'Judul'], ['sub', 'Keterangan'], ['badge', 'Nama acara'], ['brandLine', 'Baris kecil'], ['strip', 'Teks pada strip']];
+  // Isi kotak pilihan font; 'cur' = styles acara saat ini
+  function fontGrid(box, cur) {
+    box.innerHTML = '';
+    FONT_FOR.forEach(([k, label]) => {
+      const w = document.createElement('div');
+      w.className = 'fontrow';
+      const l = document.createElement('span');
+      l.textContent = label;
+      const sel = document.createElement('select');
+      sel.dataset.k = k;
+      FONTS.forEach(([id, name]) => {
+        const o = document.createElement('option');
+        o.value = id === 'jakarta' ? '' : id;
+        o.textContent = name;
+        sel.appendChild(o);
+      });
+      sel.value = (cur && cur[k] && cur[k].font) || '';
+      w.append(l, sel);
+      box.appendChild(w);
+    });
+  }
+  // Gabungkan pilihan font ke styles yang sudah ada (ukuran/warna dari kiosk tetap dipertahankan)
+  function fontStyles(box, base) {
+    const st = JSON.parse(JSON.stringify(base || {}));
+    box.querySelectorAll('select').forEach((sel) => {
+      const k = sel.dataset.k;
+      if (sel.value) { st[k] = st[k] || {}; st[k].font = sel.value; }
+      else if (st[k]) { delete st[k].font; if (!Object.keys(st[k]).length) delete st[k]; }
+    });
+    return st;
+  }
   const LAYOUTS = [['strip4','Strip 4 foto (1200x3600)'],['strip3','Strip 3 foto (1200x3600)'],['strip2','Strip 2 foto (1200x3600)'],['grid4','Kartu 4 foto (2400x3600)'],['grid6','Kartu 6 foto (2400x3600)']];
   const layName = (id) => (LAYOUTS.find((l) => l[0] === id) || LAYOUTS[0])[1].replace(/ \(.*/, '');
 
@@ -688,6 +725,7 @@
     $('statSize').textContent = fmtSize(bytes);
     chipList($('evDesigns'), []);
     layChips($('evLays'), []);
+    fontGrid($('evFonts'), {});
     renderEvents();
     fillGalEvents();
   }
@@ -718,7 +756,7 @@
 
       const edit = document.createElement('div');
       edit.className = 'edit';
-      edit.innerHTML = '<label>Nama acara</label><input type="text" maxlength="60" class="e-name"><label>Teks sambutan</label><input type="text" maxlength="140" class="e-wel"><label>Masa simpan (hari)</label><input type="text" inputmode="numeric" class="e-days"><details class="more"><summary>Teks layar awal dan strip</summary><label>Judul besar</label><input type="text" maxlength="24" class="e-title"><label>Baris di atas judul</label><input type="text" maxlength="40" class="e-brand"><label>Label acara</label><input type="text" maxlength="40" class="e-badge"><label>Teks atas pada strip</label><input type="text" maxlength="40" class="e-s1"><label>Judul pada strip</label><input type="text" maxlength="20" class="e-s2"><label>Teks bawah 1 pada strip</label><input type="text" maxlength="30" class="e-s3"><label>Teks bawah 2 pada strip</label><input type="text" maxlength="30" class="e-s4"></details><label>Desain yang tersedia</label><div class="chips e-des"></div><label>Tata letak yang ditawarkan</label><div class="chips e-lays"></div><label class="check"><input type="checkbox" class="e-hide"> Sembunyikan frame bawaan</label><div class="row e-row"></div><p class="ok e-msg"></p>';
+      edit.innerHTML = '<label>Nama acara</label><input type="text" maxlength="60" class="e-name"><label>Teks sambutan</label><input type="text" maxlength="140" class="e-wel"><label>Masa simpan (hari)</label><input type="text" inputmode="numeric" class="e-days"><details class="more"><summary>Teks layar awal dan strip</summary><label>Judul besar</label><input type="text" maxlength="24" class="e-title"><label>Baris di atas judul</label><input type="text" maxlength="40" class="e-brand"><label>Label acara</label><input type="text" maxlength="40" class="e-badge"><label>Teks atas pada strip</label><input type="text" maxlength="40" class="e-s1"><label>Judul pada strip</label><input type="text" maxlength="20" class="e-s2"><label>Teks bawah 1 pada strip</label><input type="text" maxlength="30" class="e-s3"><label>Teks bawah 2 pada strip</label><input type="text" maxlength="30" class="e-s4"></details><label>Desain yang tersedia</label><div class="chips e-des"></div><label>Tata letak yang ditawarkan</label><div class="chips e-lays"></div><label>Font teks layar depan dan strip</label><div class="fontgrid e-fonts"></div><label class="check"><input type="checkbox" class="e-hide"> Sembunyikan frame bawaan</label><div class="row e-row"></div><p class="ok e-msg"></p>';
       edit.querySelector('.e-name').value = ev.name;
       edit.querySelector('.e-wel').value = ev.welcome;
       edit.querySelector('.e-days').value = ev.retentionDays;
@@ -727,6 +765,7 @@
         .forEach((p) => { edit.querySelector(p[0]).value = ev[p[1]] || ''; });
       chipList(edit.querySelector('.e-des'), ev.designIds);
       layChips(edit.querySelector('.e-lays'), ev.layouts || []);
+      fontGrid(edit.querySelector('.e-fonts'), ev.styles || {});
       const er = edit.querySelector('.e-row');
       const msg = edit.querySelector('.e-msg');
       const save = document.createElement('button');
@@ -736,7 +775,7 @@
         try {
           await api('/api/admin/events/' + ev.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
             name: edit.querySelector('.e-name').value, welcome: edit.querySelector('.e-wel').value,
-            retentionDays: edit.querySelector('.e-days').value, designIds: picked(edit.querySelector('.e-des')), layouts: picked(edit.querySelector('.e-lays')),
+            retentionDays: edit.querySelector('.e-days').value, designIds: picked(edit.querySelector('.e-des')), layouts: picked(edit.querySelector('.e-lays')), styles: fontStyles(edit.querySelector('.e-fonts'), ev.styles),
             hideBuiltin: edit.querySelector('.e-hide').checked,
             title: edit.querySelector('.e-title').value, brandLine: edit.querySelector('.e-brand').value, badge: edit.querySelector('.e-badge').value,
             stripLine1: edit.querySelector('.e-s1').value, stripTitle: edit.querySelector('.e-s2').value,
@@ -778,7 +817,7 @@
     try {
       await api('/api/admin/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
         name: $('evName').value, welcome: $('evWelcome').value, retentionDays: $('evDays').value,
-        designIds: picked($('evDesigns')), layouts: picked($('evLays')), hideBuiltin: $('evHide').checked,
+        designIds: picked($('evDesigns')), layouts: picked($('evLays')), hideBuiltin: $('evHide').checked, styles: fontStyles($('evFonts'), {}),
         title: $('evTitle').value, brandLine: $('evBrand').value, badge: $('evBadge').value,
         stripLine1: $('evS1').value, stripTitle: $('evS2').value, stripFooter1: $('evS3').value, stripFooter2: $('evS4').value }) });
       ['evName', 'evWelcome', 'evTitle', 'evBrand', 'evBadge', 'evS1', 'evS2', 'evS3', 'evS4'].forEach((i) => { $(i).value = ''; });

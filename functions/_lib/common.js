@@ -107,6 +107,32 @@ export function randomString(n) {
 
 const txt = (v, n) => String(v ?? '').trim().slice(0, n);
 
+// Font teks layar awal (di-host sendiri di /fonts). id -> nama keluarga CSS
+export const FONTS = {
+  jakarta: 'Plus Jakarta Sans', poppins: 'Poppins', montserrat: 'Montserrat', playfair: 'Playfair Display',
+  lobster: 'Lobster', pacifico: 'Pacifico', bebas: 'Bebas Neue', oswald: 'Oswald',
+  dancing: 'Dancing Script', fredoka: 'Fredoka', caveat: 'Caveat'
+};
+export const STYLE_KEYS = ['brandLine', 'badge', 'title', 'sub', 'strip'];
+
+// Gaya per teks layar awal: {font, size (0.5-2), color (#rrggbb), bold, italic}; nilai kosong/null = bawaan.
+export function cleanStyles(v) {
+  const out = {};
+  const src = v && typeof v === 'object' ? v : {};
+  for (const k of STYLE_KEYS) {
+    const o = src[k] && typeof src[k] === 'object' ? src[k] : {};
+    const st = {};
+    if (typeof o.font === 'string' && FONTS[o.font]) st.font = o.font;
+    const sz = Number(o.size);
+    if (Number.isFinite(sz) && sz > 0) st.size = Math.round(Math.min(2, Math.max(0.5, sz)) * 100) / 100;
+    if (typeof o.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(o.color)) st.color = o.color.toLowerCase();
+    if (typeof o.bold === 'boolean') st.bold = o.bold;
+    if (typeof o.italic === 'boolean') st.italic = o.italic;
+    if (Object.keys(st).length) out[k] = st;
+  }
+  return out;
+}
+
 export function cleanEvent(raw, defaults) {
   const days = Number(raw.retentionDays);
   return {
@@ -130,6 +156,7 @@ export function cleanEvent(raw, defaults) {
     stripTitle: txt(raw.stripTitle ?? defaults.stripTitle, 20),
     stripFooter1: txt(raw.stripFooter1 ?? defaults.stripFooter1, 30),
     stripFooter2: txt(raw.stripFooter2 ?? defaults.stripFooter2, 30),
+    styles: cleanStyles(raw.styles ?? defaults.styles),
     albumToken: raw.albumToken || defaults.albumToken,
     created: raw.created || defaults.created || Date.now()
   };
