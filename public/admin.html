@@ -87,8 +87,42 @@
   .split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
 
   /* daftar desain */
+  .dropzone { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 28px 16px; margin: 8px 0 14px; border: 2px dashed var(--line); border-radius: 16px; background: rgba(0,0,0,.18); cursor: pointer; min-height: 120px; justify-content: center; }
+  .dropzone:hover, .dropzone.over, .dropzone:focus-visible { border-color: var(--accent); background: rgba(242,140,0,.12); outline: none; }
+  .dz-ico { font-size: 30px; line-height: 1; color: var(--accent); }
+  .upq { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+  .uq { display: grid; grid-template-columns: 72px 1fr auto; gap: 12px; align-items: start; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: rgba(0,0,0,.18); }
+  .uq.done { border-color: #3fae6a; opacity: .7; }
+  .uq.fail { border-color: #e5484d; }
+  .uq .th { width: 72px; height: 96px; object-fit: contain; border-radius: 8px; background: #111; }
+  .uq .f { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .uq .f input, .uq .f select { min-height: 44px; margin: 0; }
+  .uq .f .nm { grid-column: 1 / -1; }
+  .uq .meta { grid-column: 1 / -1; font-size: 12px; color: var(--muted, #c9b99a); }
+  .uq .meta.warn { color: #f5c04a; }
+  .uq .meta.bad { color: #ff8a8a; }
+  .uq .rm { min-width: 44px; min-height: 44px; border-radius: 10px; padding: 0; }
+  @media (max-width: 560px) { .uq { grid-template-columns: 56px 1fr; } .uq .rm { grid-column: 2; justify-self: end; } .uq .th { width: 56px; height: 76px; } }
   #pane-desain .split { grid-template-columns: 1fr; }
-  #pane-desain .split > .card:first-child { max-width: 640px; }
+  body.wide main, body.wide .topbar-in { max-width: none; }
+  body.wide main { padding-left: clamp(12px, 2vw, 32px); padding-right: clamp(12px, 2vw, 32px); }
+  .dropzone { min-height: 150px; }
+  .upq { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); }
+  #pane-desain .gal { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .seltools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .seltools button { min-height: 46px; }
+  .seltools .grow { flex: 1; }
+  .tile { position: relative; }
+  .tile .ck { position: absolute; top: 14px; left: 14px; width: 34px; height: 34px; border-radius: 50%; border: 3px solid #fff; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+  .gal.sel .tile .ck { display: flex; }
+  .tile.picked { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent); }
+  .tile.picked .ck { background: var(--accent); border-color: var(--accent); color: #1a1000; }
+  #dlgAll { position: fixed; inset: 0; z-index: 60; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(5,10,35,.82); }
+  #dlgAll.on { display: flex; }
+  #dlgAll .box { background: #14205f; border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
+  #dlgAll input { min-height: 48px; }
+  #dlgAll .box { width: min(520px, 100%); }
+  #dlgAll .warnbox { padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,138,128,.6); background: rgba(255,138,128,.1); margin: 10px 0 14px; font-size: 14px; line-height: 1.5; }
   .gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
   .gal .empty { grid-column: 1 / -1; }
   .tile { display: flex; flex-direction: column; gap: 8px; padding: 10px; text-align: left; background: rgba(0,0,0,.22); border: 1px solid var(--line);
@@ -247,28 +281,20 @@
       <div class="split">
         <section class="card">
           <h2>Unggah desain baru</h2>
-          <p class="sub">Gambar desain akan muncul sebagai pilihan di kiosk.</p>
-          <label for="file">Gambar (PNG, JPG, atau WebP, maks. 8 MB)</label>
-          <input id="file" type="file" accept="image/png,image/jpeg,image/webp">
-          <p id="dims" class="hint"></p>
-          <label for="name">Nama desain</label>
-          <input id="name" type="text" maxlength="40" placeholder="mis. Hari Pendidikan">
-          <label for="layout">Tata letak</label>
-          <select id="layout">
-            <option value="strip4">Strip 4 foto (rasio 1:3)</option>
-            <option value="strip3">Strip 3 foto (rasio 1:3)</option>
-            <option value="strip2">Strip 2 foto (rasio 1:3)</option>
-            <option value="grid4">Kartu 4 foto, 2x2 (rasio 2:3)</option>
-            <option value="grid6">Kartu 6 foto, 2x3 (rasio 2:3)</option>
-          </select>
-          <label for="type">Jenis</label>
-          <select id="type">
-            <option value="latar">Latar: gambar di belakang foto (seluruh strip)</option>
-            <option value="frame">Frame: gambar di atas foto, jendela transparan atau magenta #FF00FF</option>
-          </select>
+          <p class="sub">Pilih atau seret beberapa gambar sekaligus. Jenis dan tata letak dikenali otomatis dari gambar, bisa diubah per gambar sebelum diunggah.</p>
+          <label id="dropzone" class="dropzone" for="file" tabindex="0">
+            <span class="dz-ico">⬆</span>
+            <strong>Ketuk untuk memilih gambar</strong>
+            <span class="hint">atau seret berkas ke sini · PNG, JPG, WebP · maks. 8 MB per gambar</span>
+          </label>
+          <input id="file" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden>
+          <div id="upq" class="upq"></div>
           <label class="check"><input id="showText" type="checkbox"> Tampilkan teks judul dan footer di atas gambar (matikan agar strip sepenuhnya dari gambar)</label>
-          <p class="hint">Ukuran ideal: strip 1200 x 3600 px (rasio 1:3), kartu 2400 x 3600 px (rasio 2:3). Posisi jendela foto tiap tata letak ada di README.</p>
-          <div class="row"><button id="btnUpload" type="button">Unggah desain</button></div>
+          <p class="hint">Ukuran ideal: strip 1200 x 3600 px (rasio 1:3), kartu 2400 x 3600 px (rasio 2:3). Frame memakai jendela foto magenta #FF00FF; jumlah jendela dipakai untuk menebak tata letak.</p>
+          <div class="row">
+            <button id="btnUpload" type="button" disabled>Unggah desain</button>
+            <button id="btnClearQ" type="button" class="ghost" hidden>Kosongkan daftar</button>
+          </div>
           <p id="uploadMsg" class="err"></p>
         </section>
 
@@ -276,6 +302,14 @@
           <h2>Desain tersimpan</h2>
           <p class="sub">Perubahan tersimpan otomatis.</p>
           <div id="designFilter" class="chips" style="margin-bottom:12px" hidden></div>
+          <div id="seltools" class="seltools" hidden>
+            <button id="btnSel" type="button" class="ghost">Pilih beberapa</button>
+            <button id="btnSelAll" type="button" class="ghost" hidden>Pilih semua yang tampil</button>
+            <button id="btnSelNone" type="button" class="ghost" hidden>Kosongkan pilihan</button>
+            <button id="btnDelSel" type="button" class="danger" hidden disabled>Hapus terpilih</button>
+            <span class="grow"></span>
+            <button id="btnDelAll" type="button" class="danger">Hapus semua desain…</button>
+          </div>
           <div id="list" class="gal"><p class="empty">Memuat...</p></div>
           <p id="listMsg" class="err"></p>
         </section>
@@ -376,6 +410,63 @@
   /* ---------- daftar ---------- */
   // Galeri desain: kotak-kotak, ketuk untuk mengubah / menghapus
   let designFilterVal = 'all';
+  let selMode = false;
+  const pickedD = new Set();
+  let allItems = [];
+  const visibleItems = () => allItems.filter((it) => designFilterVal === 'all' || (it.layout || 'strip4') === designFilterVal);
+  function updSel() {
+    const n = pickedD.size;
+    $('btnSel').textContent = selMode ? 'Selesai memilih' : 'Pilih beberapa';
+    $('btnSelAll').hidden = !selMode; $('btnSelNone').hidden = !selMode; $('btnDelSel').hidden = !selMode;
+    $('btnDelSel').disabled = !n;
+    $('btnDelSel').textContent = n ? 'Hapus ' + n + ' terpilih' : 'Hapus terpilih';
+    $('list').classList.toggle('sel', selMode);
+    $('btnDelAll').hidden = selMode;
+  }
+  async function deleteIds(ids, label) {
+    const msg = $('listMsg'); msg.className = 'ok'; let done = 0, fail = 0, i = 0;
+    const worker = async () => {
+      while (i < ids.length) {
+        const id = ids[i++];
+        try { await api('/api/admin/backgrounds/' + id, { method: 'DELETE' }); pickedD.delete(id); } catch (e) { fail++; }
+        done++; msg.textContent = label + ' ' + done + ' dari ' + ids.length + '...';
+      }
+    };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    await loadList();
+    msg.className = fail ? 'err' : 'ok';
+    msg.textContent = (ids.length - fail) + ' desain dihapus' + (fail ? ', ' + fail + ' gagal.' : '.');
+  }
+  $('btnSel').addEventListener('click', () => { selMode = !selMode; if (!selMode) pickedD.clear(); renderGallery(allItems); });
+  $('btnSelAll').addEventListener('click', () => { visibleItems().forEach((it) => pickedD.add(it.id)); renderGallery(allItems); });
+  $('btnSelNone').addEventListener('click', () => { pickedD.clear(); renderGallery(allItems); });
+  $('btnDelSel').addEventListener('click', async () => {
+    const ids = [...pickedD]; if (!ids.length) return;
+    if (!confirm('Hapus ' + ids.length + ' desain terpilih? Tindakan ini tidak bisa dibatalkan.')) return;
+    $('btnDelSel').disabled = true;
+    await deleteIds(ids, 'Menghapus');
+  });
+  $('btnDelAll').addEventListener('click', () => {
+    if (!allItems.length) return;
+    let dlg = document.getElementById('dlgAll');
+    if (!dlg) {
+      dlg = document.createElement('div'); dlg.id = 'dlgAll'; dlg.className = 'dlgx';
+      dlg.innerHTML = '<div class="box"><h2 style="margin:0 0 8px">Hapus SEMUA desain?</h2><div class="warnbox"></div><label for="delAllIn">Ketik <b>HAPUS</b> untuk melanjutkan</label><input id="delAllIn" type="text" autocomplete="off" autocapitalize="characters" placeholder="HAPUS"><div class="row"><button type="button" class="danger" id="delAllGo" disabled>Hapus semua desain</button><button type="button" class="ghost" id="delAllNo">Batal</button></div></div>';
+      document.body.appendChild(dlg);
+      const close = () => dlg.classList.remove('on');
+      dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); });
+      dlg.querySelector('#delAllNo').addEventListener('click', close);
+      dlg.querySelector('#delAllIn').addEventListener('input', (e) => { dlg.querySelector('#delAllGo').disabled = e.target.value.trim().toUpperCase() !== 'HAPUS'; });
+      dlg.querySelector('#delAllGo').addEventListener('click', async () => {
+        close();
+        await deleteIds(allItems.map((it) => it.id), 'Menghapus');
+      });
+    }
+    dlg.querySelector('.warnbox').textContent = 'Seluruh ' + allItems.length + ' desain yang tersimpan akan dihapus permanen dari penyimpanan dan hilang dari semua acara. Foto tamu tidak ikut terhapus. Tindakan ini tidak bisa dibatalkan.';
+    dlg.querySelector('#delAllIn').value = ''; dlg.querySelector('#delAllGo').disabled = true;
+    dlg.classList.add('on');
+    setTimeout(() => dlg.querySelector('#delAllIn').focus(), 50);
+  });
   function openDesign(it) {
     let dlg = document.getElementById('dlg');
     if (!dlg) {
@@ -407,11 +498,22 @@
     nm.textContent = it.name;
     const sm = document.createElement('small');
     sm.textContent = layName(it.layout) + ' · ' + (it.type === 'frame' ? 'Frame' : 'Latar') + (it.showText ? ' · teks' : '');
-    b.append(tp, nm, sm);
-    b.addEventListener('click', () => openDesign(it));
+    const ck = document.createElement('span');
+    ck.className = 'ck'; ck.textContent = '✓'; ck.setAttribute('aria-hidden', 'true');
+    b.append(tp, nm, sm, ck);
+    if (pickedD.has(it.id)) b.classList.add('picked');
+    b.addEventListener('click', () => {
+      if (!selMode) { openDesign(it); return; }
+      if (pickedD.has(it.id)) pickedD.delete(it.id); else pickedD.add(it.id);
+      b.classList.toggle('picked', pickedD.has(it.id));
+      updSel();
+    });
     return b;
   }
   function renderGallery(items) {
+    allItems = items;
+    for (const id of [...pickedD]) if (!items.some((it) => it.id === id)) pickedD.delete(id);
+    $('seltools').hidden = !items.length;
     const list = $('list');
     list.innerHTML = '';
     const fbox = $('designFilter');
@@ -427,7 +529,8 @@
       c.addEventListener('click', () => { designFilterVal = id; renderGallery(items); });
       fbox.appendChild(c);
     });
-    items.filter((it) => designFilterVal === 'all' || (it.layout || 'strip4') === designFilterVal).forEach((it) => list.appendChild(tile(it)));
+    visibleItems().forEach((it) => list.appendChild(tile(it)));
+    updSel();
   }
 
   function itemRow(it) {
@@ -533,6 +636,7 @@
         p.className = 'empty';
         p.textContent = 'Belum ada desain yang diunggah. Kiosk memakai frame bawaan.';
         list.appendChild(p);
+        allItems = []; pickedD.clear(); selMode = false; $('seltools').hidden = true; $('designFilter').hidden = true;
       } else {
         renderGallery(j.items);
       }
@@ -545,70 +649,151 @@
   }
 
   /* ---------- unggah ---------- */
-  let lastDim = null;
-  function checkDims() {
-    $('dims').className = 'hint';
-    if (!lastDim) { $('dims').textContent = ''; return; }
-    const { w, h } = lastDim;
-    const want = ($('layout').value || '').startsWith('grid') ? 1.5 : 3;
-    let t = 'Ukuran gambar: ' + w + ' x ' + h + ' px.';
-    if (Math.abs(h / w - want) > 0.05) {
-      t += ' Rasio tidak sesuai tata letak (seharusnya ' + (want === 3 ? '1:3' : '2:3') + '). Jenis Latar akan dipotong di bagian tengah; jenis Frame akan melar.';
-      $('dims').className = 'warn';
-    }
-    $('dims').textContent = t;
+  const UPL = [
+    ['strip4', 'Strip 4 foto'], ['strip3', 'Strip 3 foto'], ['strip2', 'Strip 2 foto'],
+    ['grid4', 'Kartu 4 foto'], ['grid6', 'Kartu 6 foto']
+  ];
+  const MAXB = 8 * 1024 * 1024;
+  let queue = [];   // {file, url, name, layout, type, w, h, state, note}
+  let uploading = false;
+
+  // Analisis: ukuran, deteksi jendela magenta (jenis frame) dan jumlahnya (tata letak)
+  function analyze(it) {
+    return new Promise((res) => {
+      const img = new Image();
+      img.onload = () => {
+        it.w = img.naturalWidth; it.h = img.naturalHeight;
+        const card = it.h / it.w < 2.2;
+        const cw = card ? 240 : 120, ch = Math.round(cw * it.h / it.w);
+        const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+        const x = c.getContext('2d', { willReadFrequently: true });
+        x.drawImage(img, 0, 0, cw, ch);
+        const d = x.getImageData(0, 0, cw, ch).data;
+        const m = new Uint8Array(cw * ch); let cnt = 0;
+        for (let i = 0; i < cw * ch; i++) { const r = d[i*4], g = d[i*4+1], b = d[i*4+2]; if (r > 200 && b > 200 && g < 90) { m[i] = 1; cnt++; } }
+        let regions = 0;
+        if (cnt > cw * ch * 0.05) {
+          const seen = new Uint8Array(cw * ch);
+          for (let i = 0; i < m.length; i++) {
+            if (!m[i] || seen[i]) continue;
+            let n = 0; const st = [i]; seen[i] = 1;
+            while (st.length) {
+              const p = st.pop(); n++;
+              const px = p % cw, py = (p / cw) | 0;
+              if (px > 0 && m[p-1] && !seen[p-1]) { seen[p-1] = 1; st.push(p-1); }
+              if (px < cw-1 && m[p+1] && !seen[p+1]) { seen[p+1] = 1; st.push(p+1); }
+              if (py > 0 && m[p-cw] && !seen[p-cw]) { seen[p-cw] = 1; st.push(p-cw); }
+              if (py < ch-1 && m[p+cw] && !seen[p+cw]) { seen[p+cw] = 1; st.push(p+cw); }
+            }
+            if (n > cw * ch * 0.01) regions++;
+          }
+        }
+        if (regions) {
+          it.type = 'frame';
+          const map = card ? { 4: 'grid4', 6: 'grid6' } : { 4: 'strip4', 3: 'strip3', 2: 'strip2' };
+          if (map[regions]) { it.layout = map[regions]; it.note = 'Terdeteksi: frame dengan ' + regions + ' jendela foto.'; }
+          else it.note = 'Terdeteksi: frame, ' + regions + ' jendela (periksa tata letak).';
+        } else {
+          it.type = 'latar';
+          it.layout = card ? 'grid4' : 'strip4';
+          it.note = 'Tidak ada jendela magenta: dianggap latar.';
+        }
+        res();
+      };
+      img.onerror = () => { it.state = 'fail'; it.note = 'Gambar tidak bisa dibaca.'; res(); };
+      img.src = it.url;
+    });
   }
-  $('layout').addEventListener('change', checkDims);
-  $('file').addEventListener('change', () => {
-    const file = $('file').files[0];
-    lastDim = null;
-    checkDims();
-    if (!file) return;
-    if (!$('name').value) $('name').value = file.name.replace(/\.[^.]+$/, '').slice(0, 40);
-    const u = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      lastDim = { w: img.naturalWidth, h: img.naturalHeight };
-      checkDims();
-      URL.revokeObjectURL(u);
-    };
-    img.onerror = () => { URL.revokeObjectURL(u); };
-    img.src = u;
-  });
+
+  function ratioWarn(it) {
+    if (!it.w) return '';
+    const want = it.layout.startsWith('grid') ? 1.5 : 3;
+    if (Math.abs(it.h / it.w - want) > 0.05) return 'Rasio ' + it.w + 'x' + it.h + ' tidak sesuai tata letak (seharusnya ' + (want === 3 ? '1:3' : '2:3') + '); latar dipotong, frame melar.';
+    return '';
+  }
+
+  function renderQueue() {
+    const box = $('upq'); box.textContent = '';
+    for (const it of queue) {
+      const row = document.createElement('div'); row.className = 'uq' + (it.state === 'done' ? ' done' : it.state === 'fail' ? ' fail' : '');
+      const th = document.createElement('img'); th.className = 'th'; th.src = it.url; th.alt = ''; row.appendChild(th);
+      const f = document.createElement('div'); f.className = 'f';
+      const nm = document.createElement('input'); nm.type = 'text'; nm.className = 'nm'; nm.maxLength = 40; nm.value = it.name; nm.placeholder = 'Nama desain';
+      nm.oninput = () => { it.name = nm.value; };
+      const ly = document.createElement('select');
+      for (const [v, t] of UPL) { const o = document.createElement('option'); o.value = v; o.textContent = t; if (v === it.layout) o.selected = true; ly.appendChild(o); }
+      ly.onchange = () => { it.layout = ly.value; renderQueue(); };
+      const ty = document.createElement('select');
+      for (const [v, t] of [['frame', 'Frame (di atas foto)'], ['latar', 'Latar (di belakang)']]) { const o = document.createElement('option'); o.value = v; o.textContent = t; if (v === it.type) o.selected = true; ty.appendChild(o); }
+      ty.onchange = () => { it.type = ty.value; };
+      for (const e of [ly, ty, nm]) e.disabled = uploading || it.state === 'done';
+      f.append(nm, ly, ty);
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const rw = ratioWarn(it);
+      if (it.state === 'fail') { meta.classList.add('bad'); meta.textContent = it.note; }
+      else if (it.state === 'done') meta.textContent = 'Sudah diunggah.';
+      else if (it.state === 'busy') meta.textContent = 'Mengunggah...';
+      else { if (rw) meta.classList.add('warn'); meta.textContent = (it.w ? it.w + ' x ' + it.h + ' px. ' : '') + (it.note || '') + (rw ? ' ' + rw : ''); }
+      f.appendChild(meta);
+      row.appendChild(f);
+      const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'rm ghost'; rm.textContent = '✕'; rm.title = 'Hapus dari daftar'; rm.disabled = uploading && it.state === 'busy';
+      rm.onclick = () => { URL.revokeObjectURL(it.url); queue = queue.filter((q) => q !== it); renderQueue(); };
+      row.appendChild(rm);
+      box.appendChild(row);
+    }
+    const pending = queue.filter((q) => q.state !== 'done').length;
+    $('btnUpload').disabled = uploading || !pending;
+    $('btnUpload').textContent = pending > 1 ? 'Unggah ' + pending + ' desain' : 'Unggah desain';
+    $('btnClearQ').hidden = !queue.length;
+  }
+
+  async function addFiles(list) {
+    const msg = $('uploadMsg'); msg.className = 'err'; msg.textContent = '';
+    const bad = [];
+    const added = [];
+    for (const file of list) {
+      if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { bad.push(file.name + ' (bukan PNG/JPG/WebP)'); continue; }
+      if (file.size > MAXB) { bad.push(file.name + ' (lebih dari 8 MB)'); continue; }
+      const it = { file, url: URL.createObjectURL(file), name: file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').slice(0, 40), layout: 'strip4', type: 'frame', state: 'new', note: '' };
+      queue.push(it); added.push(it);
+    }
+    if (bad.length) msg.textContent = 'Dilewati: ' + bad.join(', ');
+    renderQueue();
+    await Promise.all(added.map(analyze));
+    renderQueue();
+  }
+
+  $('file').addEventListener('change', () => { const l = [...$('file').files]; $('file').value = ''; addFiles(l); });
+  const dz = $('dropzone');
+  dz.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('file').click(); } });
+  for (const ev of ['dragenter', 'dragover']) dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.add('over'); });
+  for (const ev of ['dragleave', 'drop']) dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.remove('over'); });
+  dz.addEventListener('drop', (e) => addFiles([...(e.dataTransfer.files || [])]));
+  $('btnClearQ').addEventListener('click', () => { if (uploading) return; for (const q of queue) URL.revokeObjectURL(q.url); queue = []; $('uploadMsg').textContent = ''; renderQueue(); });
 
   $('btnUpload').addEventListener('click', async () => {
-    const file = $('file').files[0];
     const msg = $('uploadMsg');
-    msg.className = 'err';
-    if (!file) { msg.textContent = 'Pilih gambar dulu.'; return; }
-    if (file.size > 8 * 1024 * 1024) { msg.textContent = 'Gambar lebih dari 8 MB.'; return; }
-    $('btnUpload').disabled = true;
-    msg.className = 'ok';
-    msg.textContent = 'Mengunggah...';
-    try {
-      const q = new URLSearchParams({
-        name: $('name').value || 'Desain baru',
-        type: $('type').value,
-        layout: $('layout').value,
-        text: $('showText').checked ? '1' : '0'
-      });
-      await api('/api/admin/backgrounds?' + q.toString(), {
-        method: 'POST',
-        headers: { 'Content-Type': file.type || 'application/octet-stream' },
-        body: file
-      });
-      msg.textContent = 'Berhasil diunggah.';
-      $('file').value = '';
-      $('name').value = '';
-      $('dims').textContent = '';
-      await loadList();
-    } catch (e) {
-      msg.className = 'err';
-      msg.textContent = e.message;
-    } finally {
-      $('btnUpload').disabled = false;
+    const todo = queue.filter((q) => q.state !== 'done');
+    if (!todo.length) { msg.className = 'err'; msg.textContent = 'Pilih gambar dulu.'; return; }
+    uploading = true; msg.className = 'ok'; renderQueue();
+    let ok = 0, fail = 0, n = 0;
+    for (const it of todo) {
+      n++; it.state = 'busy'; msg.className = 'ok'; msg.textContent = 'Mengunggah ' + n + ' dari ' + todo.length + '...'; renderQueue();
+      try {
+        const q = new URLSearchParams({ name: it.name || 'Desain baru', type: it.type, layout: it.layout, text: $('showText').checked ? '1' : '0' });
+        await api('/api/admin/backgrounds?' + q.toString(), { method: 'POST', headers: { 'Content-Type': it.file.type || 'application/octet-stream' }, body: it.file });
+        it.state = 'done'; ok++;
+      } catch (e) { it.state = 'fail'; it.note = e.message; fail++; }
     }
+    uploading = false;
+    msg.className = fail ? 'err' : 'ok';
+    msg.textContent = ok + ' desain berhasil diunggah' + (fail ? ', ' + fail + ' gagal (periksa daftar, lalu coba lagi).' : '.');
+    // buang yang berhasil setelah jeda singkat agar terlihat
+    setTimeout(() => { if (uploading) return; for (const q of queue) if (q.state === 'done') URL.revokeObjectURL(q.url); queue = queue.filter((q) => q.state !== 'done'); renderQueue(); }, 1800);
+    renderQueue();
+    await loadList();
   });
+  renderQueue();
 
   /* ---------- galeri foto tamu ---------- */
   const PAGE = 48;
@@ -967,6 +1152,7 @@
     t.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x === t));
       document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('on', p.id === 'pane-' + t.dataset.tab));
+      document.body.classList.toggle('wide', t.dataset.tab === 'desain');
     });
   });
 
