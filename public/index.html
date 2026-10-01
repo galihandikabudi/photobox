@@ -115,10 +115,6 @@
   .dnav[hidden] { display: none; }
   .dmid { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 300px; text-align: center; }
   .dmid b { font-size: 26px; font-weight: 800; }
-  .dmid small { font-size: 17px; opacity: .6; }
-  .ddots { display: flex; gap: 8px; }
-  .ddots i { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,.3); transition: .2s; }
-  .ddots i.on { background: var(--accent); width: 28px; border-radius: 8px; }
   .hero-strip.slide-l { animation: slideL .35s ease; }
   .hero-strip.slide-r { animation: slideR .35s ease; }
   @keyframes slideL { from { opacity: 0; translate: 90px 0; } to { opacity: 1; translate: 0 0; } }
@@ -131,22 +127,24 @@
 
   /* panel pilih desain */
   #pickerWrap {
-    position: absolute; top: 112px; right: 28px; z-index: 3; max-width: 1100px;
-    background: rgba(14,23,69,.97); border: 2px solid var(--line); border-radius: 26px;
-    padding: 22px 22px 14px; box-shadow: 0 26px 60px rgba(0,0,0,.55);
+    position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column;
+    background: radial-gradient(120% 100% at 50% 0%, #1a3a96 0%, #0e1745 70%);
   }
   #pickerWrap[hidden] { display: none; }
-  .pick-label { font-size: 24px; font-weight: 800; margin-bottom: 10px; text-align: center; }
-  .picker { display: flex; gap: 16px; justify-content: center; max-width: 1050px; overflow-x: auto; padding: 6px 12px; }
+  .pick-head { text-align: left; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 28px 28px 8px 64px; }
+  .pick-label { font-size: 44px; font-weight: 800; }
+  .pick-sub { font-size: 24px; opacity: .7; font-weight: 600; margin-top: 4px; }
+  .picker { flex: 1; min-height: 0; display: flex; flex-wrap: wrap; gap: 26px 30px; justify-content: center; align-content: flex-start;
+    overflow-y: auto; padding: 24px 64px 40px; -webkit-overflow-scrolling: touch; }
   .dz {
-    flex: 0 0 auto; width: 140px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px;
+    flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px;
     border: 4px solid transparent; border-radius: 16px; background: transparent; color: var(--cream);
     font-size: 21px; font-weight: 700; box-shadow: none;
   }
   .dz.sel { border-color: var(--accent); background: rgba(255,255,255,.1); }
   .dz.bad { opacity: .4; }
-  .dz canvas { width: 100px; border-radius: 6px; background: #fff; display: block; }
-  .dz span { max-width: 124px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dz canvas { border-radius: 8px; background: #fff; display: block; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+  .dz span { width: 100%; text-align: center; font-size: 22px; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
   /* ---------- foto ---------- */
   #s-shoot { flex-direction: row; justify-content: center; align-items: center; gap: 90px; padding: 24px 40px; }
@@ -259,7 +257,10 @@
     </button>
   </div>
   <div id="pickerWrap" hidden>
-    <p class="pick-label">Pilih desain strip</p>
+    <div class="pick-head">
+      <div><p class="pick-label">Pilih desain</p><p class="pick-sub" id="pickSub"></p></div>
+      <button id="btnPickClose" class="icon-btn ghost" type="button" aria-label="Tutup"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
     <div id="picker" class="picker"></div>
   </div>
   <div class="hero-text">
@@ -285,7 +286,7 @@
     <div class="hero-strip"><canvas id="heroStrip" width="300" height="900"></canvas></div>
     <div id="dnav" class="dnav" hidden>
       <button id="dPrev" class="icon-btn ghost" type="button" aria-label="Frame sebelumnya"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <div class="dmid"><b id="dName"></b><span id="dDots" class="ddots"></span><small>Geser untuk ganti frame</small></div>
+      <div class="dmid"><b id="dName"></b></div>
       <button id="dNext" class="icon-btn ghost" type="button" aria-label="Frame berikutnya"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     </div>
   </div>
@@ -903,7 +904,6 @@
     const ok = designs.filter((x) => !x.broken);
     $('dnav').hidden = ok.length < 2;
     $('dName').textContent = selected.name || '';
-    $('dDots').innerHTML = ok.map((x) => '<i' + (x === selected ? ' class="on"' : '') + '></i>').join('');
   }
 
   // dir: +1 = berikutnya, -1 = sebelumnya (melingkar, lewati desain rusak)
@@ -952,6 +952,7 @@
     const show = typeof open === 'boolean' ? open : w.hidden;
     w.hidden = !show;
     $('btnDesign').classList.toggle('on', show);
+    if (show) $('pickSub').textContent = LAY.name;
   }
 
   function renderPicker() {
@@ -967,10 +968,12 @@
       b.className = 'dz';
       b.dataset.id = d.id;
       const c = document.createElement('canvas');
-      c.width = CONFIG.thumb.w;
-      c.height = Math.round(CONFIG.thumb.w * LAY.h / LAY.w);
-      c.style.width = '100px';
-      c.style.height = Math.round(100 * LAY.h / LAY.w) + 'px';
+      const tw = LAY.strip ? 170 : 280;
+      c.width = tw * 2;
+      c.height = Math.round(tw * 2 * LAY.h / LAY.w);
+      c.style.width = tw + 'px';
+      b.style.width = (tw + 16) + 'px';
+      c.style.height = Math.round(tw * LAY.h / LAY.w) + 'px';
       const l = document.createElement('span');
       l.textContent = d.name;
       b.appendChild(c);
@@ -1314,7 +1317,8 @@
   $('btnCancel').addEventListener('click', onCancelClick);
   $('btnResume').addEventListener('click', () => { paused = false; showConfirm(false); });
   $('btnCancelYes').addEventListener('click', () => { showConfirm(false); cancelSession(); });
-  $('btnDesign').addEventListener('click', (e) => { e.stopPropagation(); togglePicker(); });
+  $('btnDesign').addEventListener('click', (e) => { e.stopPropagation(); togglePicker(true); });
+  $('btnPickClose').addEventListener('click', () => togglePicker(false));
   $('dPrev').addEventListener('click', () => stepDesign(-1));
   $('dNext').addEventListener('click', () => stepDesign(1));
   // Geser (swipe) kiri/kanan di layar awal untuk ganti frame
@@ -1339,7 +1343,7 @@
     });
   })();
   document.addEventListener('click', (e) => {
-    if (!$('pickerWrap').hidden && !e.target.closest('#pickerWrap')) togglePicker(false);
+    if (!$('pickerWrap').hidden && e.target === $('pickerWrap')) togglePicker(false);
   });
   $('btnFs').addEventListener('click', () => {
     const el = document.documentElement;

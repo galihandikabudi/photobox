@@ -190,7 +190,7 @@ Teks strip yang terlalu panjang otomatis dikecilkan agar muat.
 
 ### Geser untuk ganti frame
 
-Di layar awal kiosk, tamu bisa menggeser (swipe) kiri/kanan di layar sentuh untuk berganti frame. Ada juga tombol panah, titik penanda, dan nama frame di bawah strip (hanya muncul jika ada lebih dari 1 desain). Di PC bisa dengan tombol panah keyboard.
+Di layar awal kiosk, tamu bisa menggeser (swipe) kiri/kanan di layar sentuh untuk berganti frame. Ada juga tombol panah dan nama frame di bawah strip (hanya muncul jika ada lebih dari 1 desain). Di PC bisa dengan tombol panah keyboard.
 
 ## Pilihan tata letak
 
@@ -221,3 +221,5 @@ tools/upload-templates.sh https://photobox-muhada.pages.dev smkbisa strip4 grid6
 ```
 
 Lalu atur desain mana yang dipakai per acara di Admin → Acara.
+
+Ikon desain di pojok kanan atas membuka menu pilih desain layar penuh (kartu besar, mudah disentuh); ketuk desain untuk memilih, atau X untuk menutup.
