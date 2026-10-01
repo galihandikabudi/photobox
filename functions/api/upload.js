@@ -1,3 +1,5 @@
+import { getActiveEvent } from '../_lib/common.js';
+
 // POST /api/upload  — menerima strip foto (JPEG), menyimpan ke R2, mengembalikan {id, url}
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // tanpa i, l, o, 0, 1 agar tidak membingungkan
 const ID_LENGTH = 10;
@@ -41,8 +43,18 @@ export async function onRequestPost({ request, env }) {
   }
 
   const id = newId();
+  // Foto ditandai dengan acara yang sedang aktif dan masa simpan acara tersebut.
+  const meta = {};
+  try {
+    const ev = await getActiveEvent(env);
+    if (ev) {
+      meta.event = ev.id;
+      meta.expires = String(Date.now() + ev.retentionDays * 86400000);
+    }
+  } catch (e) { /* tanpa acara aktif */ }
   await env.PHOTOS.put(`strips/${id}.jpg`, data, {
-    httpMetadata: { contentType: 'image/jpeg' }
+    httpMetadata: { contentType: 'image/jpeg' },
+    customMetadata: meta
   });
 
   const base = (env.PUBLIC_BASE_URL || new URL(request.url).origin).replace(/\/$/, '');

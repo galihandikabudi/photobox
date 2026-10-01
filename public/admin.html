@@ -110,6 +110,18 @@
   .g .cap { font-size: 11.5px; padding: 6px 8px; color: var(--muted); display: flex; justify-content: space-between; gap: 4px; }
   .g.exp img { opacity: .4; }
 
+  details.more { margin-top: 14px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; background: rgba(0,0,0,.15); }
+  details.more summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; cursor: pointer; background: rgba(0,0,0,.2); }
+  .chip input { accent-color: var(--accent); }
+  .ev { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: rgba(0,0,0,.2); margin-bottom: 12px; }
+  .ev.act { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(242,140,0,.25); }
+  .ev h3 { font-size: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .tag { font-size: 11px; font-weight: 800; letter-spacing: 1px; background: var(--accent); color: var(--navy); padding: 2px 8px; border-radius: 999px; }
+  .ev .meta { font-size: 13px; color: var(--muted); margin: 4px 0 2px; }
+  .ev .edit { display: none; margin-top: 10px; }
+  .ev.open .edit { display: block; }
   @media (max-width: 760px) {
     .split { grid-template-columns: 1fr; }
     .stats { gap: 8px; }
@@ -151,12 +163,65 @@
     </div>
 
     <nav class="tabs" role="tablist">
-      <button class="tab on" data-tab="desain" type="button">Desain strip</button>
+      <button class="tab on" data-tab="acara" type="button">Acara</button>
+      <button class="tab" data-tab="desain" type="button">Desain strip</button>
       <button class="tab" data-tab="galeri" type="button">Galeri foto</button>
       <button class="tab" data-tab="setelan" type="button">Pengaturan</button>
     </nav>
 
-    <div class="pane on" id="pane-desain" style="margin-top:20px">
+    <div class="pane on" id="pane-acara" style="margin-top:20px">
+      <section class="card">
+        <h2>Acara aktif di kiosk</h2>
+        <p class="sub" id="activeInfo">Memuat...</p>
+        <div class="row"><button id="evOff" class="ghost sm" type="button">Matikan mode acara</button></div>
+        <p id="evMsg" class="ok"></p>
+      </section>
+      <div class="split">
+        <section class="card">
+          <h2>Buat acara baru</h2>
+          <p class="sub">Setiap acara punya foto, desain, masa simpan, dan tautan album sendiri.</p>
+          <label for="evName">Nama acara</label>
+          <input id="evName" type="text" maxlength="60" placeholder="mis. Pernikahan Andi &amp; Sari">
+          <label for="evWelcome">Teks sambutan di layar awal (opsional)</label>
+          <input id="evWelcome" type="text" maxlength="140" placeholder="mis. Selamat datang di pernikahan kami!">
+          <label for="evDays">Masa simpan foto (hari)</label>
+          <input id="evDays" type="text" inputmode="numeric" value="7">
+          <details class="more"><summary>Teks layar awal dan strip (opsional)</summary>
+            <p class="hint">Kosongkan untuk memakai teks bawaan.</p>
+            <label for="evTitle">Judul besar (bawaan: PHOTOBOX)</label>
+            <input id="evTitle" type="text" maxlength="24" placeholder="mis. ANDI &amp; SARI">
+            <label for="evBrand">Baris di atas judul (bawaan: SMK MUHAMMADIYAH TODANAN)</label>
+            <input id="evBrand" type="text" maxlength="40" placeholder="mis. THE WEDDING OF">
+            <label for="evBadge">Label acara (bawaan: nama acara)</label>
+            <input id="evBadge" type="text" maxlength="40" placeholder="mis. 12 Desember 2026">
+            <label for="evS1">Teks atas pada strip</label>
+            <input id="evS1" type="text" maxlength="40">
+            <label for="evS2">Judul pada strip</label>
+            <input id="evS2" type="text" maxlength="20">
+            <label for="evS3">Teks bawah 1 pada strip</label>
+            <input id="evS3" type="text" maxlength="30">
+            <label for="evS4">Teks bawah 2 pada strip</label>
+            <input id="evS4" type="text" maxlength="30">
+            <p class="hint">Teks strip hanya tampil pada desain unggahan dengan "Tampilkan teks" menyala. Frame bawaan dan template frame memiliki teks di dalam gambarnya.</p>
+          </details>
+          <label>Desain yang tersedia</label>
+          <div id="evDesigns" class="chips"></div>
+          <label>Tata letak yang ditawarkan di kiosk <span class="hint">(kosong = Strip 4 foto, ditambah tata letak dari desain unggahan)</span></label>
+          <div id="evLays" class="chips"></div>
+          <p class="hint">Jika tidak ada yang dicentang, semua desain tersedia.</p>
+          <label class="check"><input id="evHide" type="checkbox"> Sembunyikan frame bawaan</label>
+          <div class="row"><button id="evCreate" type="button">Buat acara</button></div>
+          <p id="evCreateMsg" class="err"></p>
+        </section>
+        <section class="card">
+          <h2>Daftar acara</h2>
+          <p class="sub">Aktifkan acara sebelum acara dimulai. Foto baru otomatis masuk ke acara yang aktif.</p>
+          <div id="evList"><p class="empty">Memuat...</p></div>
+        </section>
+      </div>
+    </div>
+
+    <div class="pane" id="pane-desain" style="margin-top:20px">
       <div class="split">
         <section class="card">
           <h2>Unggah desain baru</h2>
@@ -166,13 +231,21 @@
           <p id="dims" class="hint"></p>
           <label for="name">Nama desain</label>
           <input id="name" type="text" maxlength="40" placeholder="mis. Hari Pendidikan">
+          <label for="layout">Tata letak</label>
+          <select id="layout">
+            <option value="strip4">Strip 4 foto (rasio 1:3)</option>
+            <option value="strip3">Strip 3 foto (rasio 1:3)</option>
+            <option value="strip2">Strip 2 foto (rasio 1:3)</option>
+            <option value="grid4">Kartu 4 foto, 2x2 (rasio 2:3)</option>
+            <option value="grid6">Kartu 6 foto, 2x3 (rasio 2:3)</option>
+          </select>
           <label for="type">Jenis</label>
           <select id="type">
             <option value="latar">Latar: gambar di belakang foto (seluruh strip)</option>
             <option value="frame">Frame: gambar di atas foto, jendela transparan atau magenta #FF00FF</option>
           </select>
           <label class="check"><input id="showText" type="checkbox"> Tampilkan teks judul dan footer di atas gambar (matikan agar strip sepenuhnya dari gambar)</label>
-          <p class="hint">Ukuran ideal 1200 x 3600 px (rasio 1:3). Posisi empat foto mengikuti panduan frame di README.</p>
+          <p class="hint">Ukuran ideal: strip 1200 x 3600 px (rasio 1:3), kartu 2400 x 3600 px (rasio 2:3). Posisi jendela foto tiap tata letak ada di README.</p>
           <div class="row"><button id="btnUpload" type="button">Unggah desain</button></div>
           <p id="uploadMsg" class="err"></p>
         </section>
@@ -190,6 +263,11 @@
       <section class="card">
         <h2>Galeri foto tamu</h2>
         <p id="galInfo" class="sub" style="margin-bottom:0">Memuat...</p>
+        <div class="toolbar-row">
+          <select id="galEvent" style="width:auto;min-width:200px"></select>
+          <button id="galZip" class="ghost sm" type="button">Unduh zip</button>
+          <button id="galClean" class="ghost sm" type="button">Hapus kedaluwarsa</button>
+        </div>
         <div class="toolbar-row">
           <button id="galAll" class="ghost sm" type="button">Pilih semua</button>
           <button id="galNone" class="ghost sm" type="button">Batal pilih</button>
@@ -213,6 +291,7 @@
   </div>
 </main>
 
+<script src="zip.js"></script>
 <script>
 (() => {
   'use strict';
@@ -249,6 +328,7 @@
       try { sessionStorage.setItem('pb_admin', pw); } catch (e) { /* abaikan */ }
       setLoggedIn(true);
       await loadList();
+      await loadEvents();
       loadGallery();
     } catch (e) {
       pw = '';
@@ -299,6 +379,15 @@
     });
     typeSel.value = it.type;
 
+    const laySel = document.createElement('select');
+    LAYOUTS.forEach((o) => {
+      const opt = document.createElement('option');
+      opt.value = o[0];
+      opt.textContent = o[1];
+      laySel.appendChild(opt);
+    });
+    laySel.value = it.layout || 'strip4';
+
     const chkWrap = document.createElement('label');
     chkWrap.className = 'check';
     const chk = document.createElement('input');
@@ -327,6 +416,7 @@
     }
     nameIn.addEventListener('change', () => save({ name: nameIn.value }));
     typeSel.addEventListener('change', () => save({ type: typeSel.value }));
+    laySel.addEventListener('change', () => save({ layout: laySel.value }));
     chk.addEventListener('change', () => save({ showText: chk.checked }));
 
     const del = document.createElement('button');
@@ -347,7 +437,7 @@
     rowBtn.className = 'row';
     rowBtn.appendChild(del);
 
-    f.append(nameIn, typeSel, chkWrap, rowBtn, msg);
+    f.append(nameIn, laySel, typeSel, chkWrap, rowBtn, msg);
     row.append(th, f);
     return row;
   }
@@ -355,7 +445,7 @@
   async function loadList() {
     $('listMsg').textContent = '';
     try {
-      const r = await fetch('/api/backgrounds', { cache: 'no-cache' });
+      const r = await fetch('/api/backgrounds?all=1', { cache: 'no-cache' });
       const j = await r.json();
       const list = $('list');
       list.innerHTML = '';
@@ -367,6 +457,7 @@
       } else {
         j.items.forEach((it) => list.appendChild(itemRow(it)));
       }
+      designList = j.items;
       $('statDesign').textContent = j.items.length;
       $('hideBuiltin').checked = !!(j.settings && j.settings.hideBuiltin);
     } catch (e) {
@@ -375,23 +466,31 @@
   }
 
   /* ---------- unggah ---------- */
+  let lastDim = null;
+  function checkDims() {
+    $('dims').className = 'hint';
+    if (!lastDim) { $('dims').textContent = ''; return; }
+    const { w, h } = lastDim;
+    const want = ($('layout').value || '').startsWith('grid') ? 1.5 : 3;
+    let t = 'Ukuran gambar: ' + w + ' x ' + h + ' px.';
+    if (Math.abs(h / w - want) > 0.05) {
+      t += ' Rasio tidak sesuai tata letak (seharusnya ' + (want === 3 ? '1:3' : '2:3') + '). Jenis Latar akan dipotong di bagian tengah; jenis Frame akan melar.';
+      $('dims').className = 'warn';
+    }
+    $('dims').textContent = t;
+  }
+  $('layout').addEventListener('change', checkDims);
   $('file').addEventListener('change', () => {
     const file = $('file').files[0];
-    $('dims').textContent = '';
-    $('dims').className = 'hint';
+    lastDim = null;
+    checkDims();
     if (!file) return;
     if (!$('name').value) $('name').value = file.name.replace(/\.[^.]+$/, '').slice(0, 40);
     const u = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const w = img.naturalWidth;
-      const h = img.naturalHeight;
-      let t = 'Ukuran gambar: ' + w + ' x ' + h + ' px.';
-      if (Math.abs(h / w - 3) > 0.05) {
-        t += ' Rasio bukan 1:3. Jenis Latar akan dipotong di bagian tengah; jenis Frame akan melar.';
-        $('dims').className = 'warn';
-      }
-      $('dims').textContent = t;
+      lastDim = { w: img.naturalWidth, h: img.naturalHeight };
+      checkDims();
       URL.revokeObjectURL(u);
     };
     img.onerror = () => { URL.revokeObjectURL(u); };
@@ -411,6 +510,7 @@
       const q = new URLSearchParams({
         name: $('name').value || 'Desain baru',
         type: $('type').value,
+        layout: $('layout').value,
         text: $('showText').checked ? '1' : '0'
       });
       await api('/api/admin/backgrounds?' + q.toString(), {
@@ -485,14 +585,13 @@
     $('galMsg').textContent = '';
     if (!more) { galItems = []; galSel.clear(); $('gal').innerHTML = ''; }
     try {
-      const r = await api('/api/admin/strips?offset=' + galItems.length + '&limit=' + PAGE);
+      const f = $('galEvent').value;
+      const r = await api('/api/admin/strips?offset=' + galItems.length + '&limit=' + PAGE + (f ? '&event=' + f : ''));
       galTotal = r.total;
-      $('statPhotos').textContent = r.total;
-      $('statSize').textContent = fmtSize(r.totalBytes);
       galItems = galItems.concat(r.items);
       addTiles(r.items);
       $('galInfo').textContent = r.total
-        ? r.total + ' foto, total ' + fmtSize(r.totalBytes) + '. Foto otomatis dihapus setelah ' + r.retentionDays + ' hari (yang pudar sudah lewat batas).'
+        ? r.total + ' foto, total ' + fmtSize(r.totalBytes) + '. Foto yang pudar sudah melewati masa simpan; hapus lewat "Hapus kedaluwarsa".'
         : 'Belum ada foto tamu.';
       updateGalButtons();
     } catch (e) {
@@ -531,6 +630,204 @@
       $('galMsg').textContent = e.message;
       updateGalButtons();
     }
+  });
+
+  /* ---------- acara ---------- */
+  let evData = { events: [], active: null, noEvent: { count: 0, bytes: 0 } };
+  let designList = [];
+
+  const LAYOUTS = [['strip4','Strip 4 foto (1200x3600)'],['strip3','Strip 3 foto (1200x3600)'],['strip2','Strip 2 foto (1200x3600)'],['grid4','Kartu 4 foto (2400x3600)'],['grid6','Kartu 6 foto (2400x3600)']];
+  const layName = (id) => (LAYOUTS.find((l) => l[0] === id) || LAYOUTS[0])[1].replace(/ \(.*/, '');
+
+  function layChips(container, selected) {
+    container.innerHTML = '';
+    LAYOUTS.forEach((l) => {
+      const lb = document.createElement('label');
+      lb.className = 'chip';
+      const c = document.createElement('input');
+      c.type = 'checkbox';
+      c.value = l[0];
+      c.checked = selected.includes(l[0]);
+      lb.append(c, document.createTextNode(layName(l[0])));
+      container.appendChild(lb);
+    });
+  }
+
+  function chipList(container, selected) {
+    container.innerHTML = '';
+    designList.forEach((d) => {
+      const l = document.createElement('label');
+      l.className = 'chip';
+      const c = document.createElement('input');
+      c.type = 'checkbox';
+      c.value = d.id;
+      c.checked = selected.includes(d.id);
+      l.append(c, document.createTextNode(d.name + ' · ' + layName(d.layout)));
+      container.appendChild(l);
+    });
+    if (!designList.length) container.innerHTML = '<span class="hint">Belum ada desain unggahan (frame bawaan dipakai).</span>';
+  }
+  const picked = (container) => Array.from(container.querySelectorAll('input:checked')).map((c) => c.value);
+
+  async function loadEvents() {
+    try {
+      evData = await api('/api/admin/events');
+    } catch (e) {
+      $('evList').innerHTML = '<p class="err"></p>';
+      $('evList').firstChild.textContent = e.message;
+      return;
+    }
+    const act = evData.events.find((x) => x.id === evData.active);
+    $('activeInfo').textContent = act
+      ? 'Aktif: ' + act.name + '. Foto baru masuk ke acara ini dan disimpan ' + act.retentionDays + ' hari.'
+      : 'Tidak ada acara aktif (mode umum). Foto baru disimpan ' + '7 hari dan tidak masuk album mana pun.';
+    $('evOff').disabled = !act;
+    const total = evData.events.reduce((n, x) => n + x.count, 0) + evData.noEvent.count;
+    const bytes = evData.events.reduce((n, x) => n + x.bytes, 0) + evData.noEvent.bytes;
+    $('statPhotos').textContent = total;
+    $('statSize').textContent = fmtSize(bytes);
+    chipList($('evDesigns'), []);
+    layChips($('evLays'), []);
+    renderEvents();
+    fillGalEvents();
+  }
+
+  function renderEvents() {
+    const box = $('evList');
+    box.innerHTML = '';
+    if (!evData.events.length) { box.innerHTML = '<p class="empty">Belum ada acara. Buat acara pertama di sebelah.</p>'; return; }
+    evData.events.slice().reverse().forEach((ev) => {
+      const el = document.createElement('div');
+      el.className = 'ev' + (ev.id === evData.active ? ' act' : '');
+      const link = location.origin + '/a/' + ev.albumToken;
+      const h = document.createElement('h3');
+      h.textContent = ev.name;
+      if (ev.id === evData.active) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'AKTIF'; h.appendChild(t); }
+      const meta = document.createElement('p');
+      meta.className = 'meta';
+      meta.textContent = ev.count + ' foto (' + fmtSize(ev.bytes) + '), disimpan ' + ev.retentionDays + ' hari';
+      const row = document.createElement('div');
+      row.className = 'row';
+      const mk = (txt, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = txt; b.addEventListener('click', fn); row.appendChild(b); return b; };
+      if (ev.id !== evData.active) mk('Aktifkan', 'sm', () => setActive(ev.id));
+      mk('Salin tautan album', 'ghost sm', async (e) => {
+        try { await navigator.clipboard.writeText(link); e.target.textContent = 'Tersalin'; } catch (err) { prompt('Salin tautan album:', link); }
+      });
+      mk('Buka album', 'ghost sm', () => window.open(link, '_blank', 'noopener'));
+      mk('Edit', 'ghost sm', () => el.classList.toggle('open'));
+
+      const edit = document.createElement('div');
+      edit.className = 'edit';
+      edit.innerHTML = '<label>Nama acara</label><input type="text" maxlength="60" class="e-name"><label>Teks sambutan</label><input type="text" maxlength="140" class="e-wel"><label>Masa simpan (hari)</label><input type="text" inputmode="numeric" class="e-days"><details class="more"><summary>Teks layar awal dan strip</summary><label>Judul besar</label><input type="text" maxlength="24" class="e-title"><label>Baris di atas judul</label><input type="text" maxlength="40" class="e-brand"><label>Label acara</label><input type="text" maxlength="40" class="e-badge"><label>Teks atas pada strip</label><input type="text" maxlength="40" class="e-s1"><label>Judul pada strip</label><input type="text" maxlength="20" class="e-s2"><label>Teks bawah 1 pada strip</label><input type="text" maxlength="30" class="e-s3"><label>Teks bawah 2 pada strip</label><input type="text" maxlength="30" class="e-s4"></details><label>Desain yang tersedia</label><div class="chips e-des"></div><label>Tata letak yang ditawarkan</label><div class="chips e-lays"></div><label class="check"><input type="checkbox" class="e-hide"> Sembunyikan frame bawaan</label><div class="row e-row"></div><p class="ok e-msg"></p>';
+      edit.querySelector('.e-name').value = ev.name;
+      edit.querySelector('.e-wel').value = ev.welcome;
+      edit.querySelector('.e-days').value = ev.retentionDays;
+      edit.querySelector('.e-hide').checked = ev.hideBuiltin;
+      [['.e-title', 'title'], ['.e-brand', 'brandLine'], ['.e-badge', 'badge'], ['.e-s1', 'stripLine1'], ['.e-s2', 'stripTitle'], ['.e-s3', 'stripFooter1'], ['.e-s4', 'stripFooter2']]
+        .forEach((p) => { edit.querySelector(p[0]).value = ev[p[1]] || ''; });
+      chipList(edit.querySelector('.e-des'), ev.designIds);
+      layChips(edit.querySelector('.e-lays'), ev.layouts || []);
+      const er = edit.querySelector('.e-row');
+      const msg = edit.querySelector('.e-msg');
+      const save = document.createElement('button');
+      save.type = 'button'; save.textContent = 'Simpan perubahan';
+      save.addEventListener('click', async () => {
+        msg.className = 'ok e-msg'; msg.textContent = 'Menyimpan...';
+        try {
+          await api('/api/admin/events/' + ev.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+            name: edit.querySelector('.e-name').value, welcome: edit.querySelector('.e-wel').value,
+            retentionDays: edit.querySelector('.e-days').value, designIds: picked(edit.querySelector('.e-des')), layouts: picked(edit.querySelector('.e-lays')),
+            hideBuiltin: edit.querySelector('.e-hide').checked,
+            title: edit.querySelector('.e-title').value, brandLine: edit.querySelector('.e-brand').value, badge: edit.querySelector('.e-badge').value,
+            stripLine1: edit.querySelector('.e-s1').value, stripTitle: edit.querySelector('.e-s2').value,
+            stripFooter1: edit.querySelector('.e-s3').value, stripFooter2: edit.querySelector('.e-s4').value }) });
+          await loadEvents();
+        } catch (err) { msg.className = 'err e-msg'; msg.textContent = err.message; }
+      });
+      const newLink = document.createElement('button');
+      newLink.type = 'button'; newLink.className = 'ghost sm'; newLink.textContent = 'Ganti tautan album';
+      newLink.addEventListener('click', async () => {
+        if (!confirm('Tautan album lama akan berhenti berlaku. Lanjutkan?')) return;
+        try { await api('/api/admin/events/' + ev.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newAlbumLink: true }) }); await loadEvents(); }
+        catch (err) { msg.className = 'err e-msg'; msg.textContent = err.message; }
+      });
+      const del = document.createElement('button');
+      del.type = 'button'; del.className = 'danger sm'; del.textContent = 'Hapus acara';
+      del.addEventListener('click', async () => {
+        if (!confirm('Hapus acara "' + ev.name + '"?')) return;
+        const withPhotos = ev.count > 0 && confirm('Hapus juga ' + ev.count + ' foto acara ini secara permanen?\n\nOK = hapus foto juga\nBatal = foto tetap tersimpan tanpa acara');
+        try { await api('/api/admin/events/' + ev.id + (withPhotos ? '?photos=1' : ''), { method: 'DELETE' }); await loadEvents(); loadGallery(); }
+        catch (err) { msg.className = 'err e-msg'; msg.textContent = err.message; }
+      });
+      er.append(save, newLink, del);
+      el.append(h, meta, row, edit);
+      box.appendChild(el);
+    });
+  }
+
+  async function setActive(id) {
+    $('evMsg').className = 'ok'; $('evMsg').textContent = '';
+    try { await api('/api/admin/events-active', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }); await loadEvents(); }
+    catch (e) { $('evMsg').className = 'err'; $('evMsg').textContent = e.message; }
+  }
+  $('evOff').addEventListener('click', () => setActive(null));
+
+  $('evCreate').addEventListener('click', async () => {
+    const m = $('evCreateMsg'); m.className = 'err'; m.textContent = '';
+    if (!$('evName').value.trim()) { m.textContent = 'Nama acara wajib diisi.'; return; }
+    try {
+      await api('/api/admin/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        name: $('evName').value, welcome: $('evWelcome').value, retentionDays: $('evDays').value,
+        designIds: picked($('evDesigns')), layouts: picked($('evLays')), hideBuiltin: $('evHide').checked,
+        title: $('evTitle').value, brandLine: $('evBrand').value, badge: $('evBadge').value,
+        stripLine1: $('evS1').value, stripTitle: $('evS2').value, stripFooter1: $('evS3').value, stripFooter2: $('evS4').value }) });
+      ['evName', 'evWelcome', 'evTitle', 'evBrand', 'evBadge', 'evS1', 'evS2', 'evS3', 'evS4'].forEach((i) => { $(i).value = ''; });
+      $('evHide').checked = false;
+      m.className = 'ok'; m.textContent = 'Acara dibuat. Tekan Aktifkan untuk memakainya di kiosk.';
+      await loadEvents();
+    } catch (e) { m.className = 'err'; m.textContent = e.message; }
+  });
+
+  function fillGalEvents() {
+    const sel = $('galEvent');
+    const cur = sel.value;
+    sel.innerHTML = '';
+    const add = (v, t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); };
+    add('', 'Semua foto');
+    evData.events.slice().reverse().forEach((e) => add(e.id, e.name + ' (' + e.count + ')'));
+    add('none', 'Tanpa acara (' + evData.noEvent.count + ')');
+    if (Array.from(sel.options).some((o) => o.value === cur)) sel.value = cur;
+  }
+  $('galEvent').addEventListener('change', () => loadGallery());
+
+  $('galZip').addEventListener('click', async () => {
+    const msg = $('galMsg'); msg.className = 'ok'; msg.textContent = 'Mengambil daftar foto...';
+    try {
+      const f = $('galEvent').value;
+      let items = [];
+      for (let off = 0; ; off += 200) {
+        const r = await api('/api/admin/strips?offset=' + off + '&limit=200' + (f ? '&event=' + f : ''));
+        items = items.concat(r.items);
+        if (items.length >= r.total || !r.items.length) break;
+      }
+      items = items.filter((x) => !x.expired);
+      if (!items.length) { msg.className = 'err'; msg.textContent = 'Tidak ada foto untuk diunduh.'; return; }
+      items.sort((a, b) => a.uploaded - b.uploaded);
+      const ev = evData.events.find((e) => e.id === f);
+      const nm = (ev ? ev.name : 'photobox').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'photobox';
+      await window.PhotoboxZip.downloadAll(items, 'album-' + nm + '.zip', (d, t) => { msg.textContent = 'Menyiapkan ' + d + ' / ' + t + '...'; });
+      msg.textContent = items.length + ' foto diunduh sebagai zip.';
+    } catch (e) { msg.className = 'err'; msg.textContent = e.message; }
+  });
+
+  $('galClean').addEventListener('click', async () => {
+    if (!confirm('Hapus semua foto yang sudah melewati masa simpannya?')) return;
+    const msg = $('galMsg'); msg.className = 'ok'; msg.textContent = 'Membersihkan...';
+    try {
+      const r = await api('/api/admin/cleanup', { method: 'POST' });
+      msg.textContent = r.deleted + ' foto kedaluwarsa dihapus.';
+      await loadEvents(); await loadGallery();
+    } catch (e) { msg.className = 'err'; msg.textContent = e.message; }
   });
 
   /* ---------- pengaturan ---------- */

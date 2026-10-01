@@ -70,8 +70,10 @@ periksa langkah 1 dan nama bucketnya, lalu Retry deployment.
 Setelah itu, setiap `git push` ke `main` otomatis men-deploy versi baru (termasuk saat Anda mengganti `public/frame.png`).
 
 **4. Aturan hapus otomatis di R2.** R2 > `photobox-muhada` > Settings > Object lifecycle rules > Add rule:
-"Delete objects after 7 days", prefix `strips/`. Ini penghapusan permanen di sisi penyimpanan
-(server juga menolak menampilkan foto yang lebih tua dari 7 hari).
+"Delete objects after 90 days" (batas atas pengaman), prefix `strips/`. Masa simpan sebenarnya diatur
+per acara di admin (server menolak menampilkan foto yang sudah lewat masa simpannya, dan tombol
+"Hapus kedaluwarsa" di galeri menghapusnya permanen). Jangan pasang aturan yang lebih pendek dari masa simpan
+acara terlama Anda.
 
 **5. (Opsional) Domain sendiri**, misalnya `photobox.smkmuhada.sch.id`: Pages > Custom domains. QR otomatis memakai
 domain yang dipakai kiosk. Untuk memaksa domain tertentu, tambahkan variabel `PUBLIC_BASE_URL` di
@@ -153,7 +155,7 @@ npx wrangler pages secret put ADMIN_PASSWORD --project-name photobox-muhada
 
 **Tombol Batalkan**: di layar pemotretan; jika sudah ada foto akan meminta konfirmasi. Tombol Esc juga membatalkan.
 
-Lifecycle rule R2 (hapus 7 hari) hanya untuk prefix `strips/`, jangan seluruh bucket, agar desain tidak ikut terhapus.
+Lifecycle rule R2 hanya untuk prefix `strips/`, jangan seluruh bucket, agar desain tidak ikut terhapus.
 
 **Catatan:** sandi admin saat ini tertulis di `wrangler.toml` (`ADMIN_PASSWORD = "smkbisa"`), jadi repo GitHub sebaiknya **private**. Untuk mengganti sandi, ubah nilai itu lalu push ulang. Jika ingin menyembunyikannya, hapus baris itu dan pakai `wrangler pages secret put ADMIN_PASSWORD`.
 
@@ -162,3 +164,60 @@ Lifecycle rule R2 (hapus 7 hari) hanya untuk prefix `strips/`, jangan seluruh bu
 - **Galeri:** di `/admin`, bagian "Galeri foto tamu" menampilkan semua strip yang tersimpan (terbaru dulu). Centang foto lalu tekan "Hapus terpilih", atau "Pilih semua". Foto juga otomatis terhapus setelah `RETENTION_DAYS` hari.
 - **Cetak:** layar hasil punya tombol **Cetak**. Bawaan `CONFIG.print.sheet = '2up'` mencetak 2 strip pada kertas foto 4x6 inci (dipotong menjadi dua 2x6). Ubah ke `'single'` untuk kertas 2x6 inci, atau `enabled: false` untuk menyembunyikan tombol.
 - **Cetak tanpa dialog:** jalankan Chrome kiosk dengan `--kiosk-printing` dan atur printer foto sebagai printer bawaan, lalu di pengaturan printer pilih ukuran kertas 4x6 dan skala 100% (tanpa margin).
+
+## Template frame siap pakai
+
+Folder `template/frames/` berisi frame bertema ceria (Konfeti Pesta, Retro Film, Pastel Ceria, Neon Malam, Doodle Sekolah, Pop Sunburst). `sekolah-strip4/` memuat teks SMK Muhada di gambar (unggah dengan **Tampilkan teks: mati**). Sub-folder `strip4/ strip3/ strip2/ grid4/ grid6/` adalah versi **polos tanpa teks** untuk tiap tata letak; unggah dengan **Tampilkan teks: aktif** agar judul dan footer mengikuti teks acara. Jendela foto berwarna magenta `#FF00FF` dan otomatis dibuat transparan.
+
+## Mode acara (untuk jasa sewa photobox)
+
+Di `/admin` tab **Acara**:
+1. **Buat acara**: nama, teks sambutan (tampil di layar awal), masa simpan foto (hari), desain yang tersedia, dan apakah frame bawaan disembunyikan.
+2. **Aktifkan** acara sebelum acara dimulai. Kiosk menampilkan nama acara, memakai desain acara itu, dan setiap foto baru otomatis masuk ke acara tersebut dengan masa simpannya sendiri.
+3. **Tautan album** (`/a/<kode-rahasia>`): berikan hanya ke penyelenggara. Isinya semua foto acara dan tombol **Unduh semua (zip)**. Tamu hanya menerima fotonya sendiri lewat QR. Tombol "Ganti tautan album" mematikan tautan lama.
+4. Di tab **Galeri foto** ada filter per acara, unduh zip per acara, dan **Hapus kedaluwarsa**.
+
+Tanpa acara aktif, aplikasi berjalan seperti biasa (masa simpan `RETENTION_DAYS`, foto tidak masuk album mana pun).
+Zip dibuat di browser (tanpa kompresi); untuk acara dengan ribuan foto, unduh dari komputer, bukan HP.
+
+### Teks layar awal per acara
+
+Di Admin → Acara → "Teks layar awal dan strip" (saat membuat atau mengedit acara) kamu bisa mengganti:
+judul besar, tulisan kecil di atas judul, label acara, sapaan, serta teks pada strip (baris 1, judul, footer 1 & 2).
+Kolom kosong = memakai teks bawaan; label acara kosong = memakai nama acara.
+Catatan: frame bawaan dan template `sekolah-strip4` sudah memuat teks di gambarnya, jadi tidak ikut berubah. Template polos (`strip4/ strip3/ ...`) memakai teks acara.
+Teks strip yang terlalu panjang otomatis dikecilkan agar muat.
+
+### Geser untuk ganti frame
+
+Di layar awal kiosk, tamu bisa menggeser (swipe) kiri/kanan di layar sentuh untuk berganti frame. Ada juga tombol panah, titik penanda, dan nama frame di bawah strip (hanya muncul jika ada lebih dari 1 desain). Di PC bisa dengan tombol panah keyboard.
+
+## Pilihan tata letak
+
+Kiosk mendukung lima tata letak. Tiap desain yang diunggah punya satu tata letak (dipilih saat unggah, bisa diubah di daftar desain).
+
+| Tata letak | Ukuran gambar frame | Jendela foto (satuan dasar) |
+|---|---|---|
+| Strip 4 foto | 1200 x 3600 | 4 jendela 540 x 355, mulai x=30, y=170, jarak 20 |
+| Strip 3 foto | 1200 x 3600 | 3 jendela 540 x 480, x=30, y=170, jarak 20 |
+| Strip 2 foto | 1200 x 3600 | 2 jendela 540 x 730, x=30, y=170, jarak 20 |
+| Kartu 4 foto (2x2) | 2400 x 3600 | 4 jendela 560 x 730, x=30 dan 610, y=170, jarak 20 |
+| Kartu 6 foto (2x3) | 2400 x 3600 | 6 jendela 560 x 480, x=30 dan 610, y=170, jarak 20 |
+
+Satuan dasar: lebar strip 600 / kartu 1200, tinggi 1800; gambar akhir 2x lebih besar. Judul di atas 170, footer 150 di bawah. Jendela diisi magenta #FF00FF (atau dibuat transparan) pada frame.
+
+- Kiosk menampilkan tombol pilihan tata letak di layar awal bila lebih dari satu tersedia. Geser (swipe) hanya berganti frame di dalam tata letak yang dipilih.
+- Tanpa acara aktif: Strip 4 foto + tata letak dari desain yang diunggah. Dengan acara aktif: bisa dibatasi lewat "Tata letak yang ditawarkan" pada acara (kosong = aturan tanpa acara).
+- Frame bawaan (digambar aplikasi) tersedia untuk semua tata letak; `frame.png` hanya untuk Strip 4 foto.
+- Kartu dicetak satu per lembar 4x6 inci; strip dicetak 2 per lembar 4x6 (atau 1 per lembar 2x6 jika `print.sheet: 'single'`).
+
+### Unggah template sekaligus
+
+30 template polos (6 tema x 5 tata letak) bisa diunggah dengan satu perintah dari folder proyek:
+
+```
+tools/upload-templates.sh https://photobox-muhada.pages.dev smkbisa            # semua
+tools/upload-templates.sh https://photobox-muhada.pages.dev smkbisa strip4 grid6  # hanya tata letak tertentu
+```
+
+Lalu atur desain mana yang dipakai per acara di Admin → Acara.

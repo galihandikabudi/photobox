@@ -1,7 +1,7 @@
 // GET /api/backgrounds — daftar desain strip untuk kiosk (publik)
-import { BG_PREFIX, BG_ID_RE, json, toItem, readSettings } from '../_lib/common.js';
+import { BG_PREFIX, BG_ID_RE, json, toItem, readSettings, getActiveEvent } from '../_lib/common.js';
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ request, env }) {
   if (!env.PHOTOS) return json({ items: [], settings: { hideBuiltin: false } });
 
   const items = [];
@@ -15,5 +15,20 @@ export async function onRequestGet({ env }) {
   } while (cursor);
 
   items.sort((a, b) => a.created - b.created);
-  return json({ items, settings: await readSettings(env) }, 200, { 'Cache-Control': 'public, max-age=15' });
+  let settings = await readSettings(env);
+  let list = items;
+  let event = null;
+  const all = new URL(request.url).searchParams.get('all') === '1';   // admin: semua desain, pengaturan global
+  const ev = all ? null : await getActiveEvent(env);
+  if (ev) {
+    // Acara aktif: pakai desain yang dipilih untuk acara itu (kosong = semua desain)
+    if (ev.designIds.length) list = items.filter((it) => ev.designIds.includes(it.id));
+    settings = { hideBuiltin: ev.hideBuiltin };
+    event = {
+      id: ev.id, layouts: ev.layouts, name: ev.name, welcome: ev.welcome, retentionDays: ev.retentionDays,
+      title: ev.title, brandLine: ev.brandLine, badge: ev.badge,
+      stripLine1: ev.stripLine1, stripTitle: ev.stripTitle, stripFooter1: ev.stripFooter1, stripFooter2: ev.stripFooter2
+    };
+  }
+  return json({ items: list, settings, event }, 200, { 'Cache-Control': 'public, max-age=5' });
 }

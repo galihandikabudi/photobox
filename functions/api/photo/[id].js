@@ -1,5 +1,6 @@
 // GET /api/photo/:id        -> menampilkan foto
 // GET /api/photo/:id?dl=1   -> mengunduh foto
+import { stripExpiry } from '../../_lib/common.js';
 const ID_RE = /^[a-hj-km-np-z2-9]{10}$/;
 
 function notFound() {
@@ -17,8 +18,7 @@ export async function onRequestGet({ params, request, env, waitUntil }) {
   const obj = await env.PHOTOS.get(key);
   if (!obj) return notFound();
 
-  const days = Number(env.RETENTION_DAYS || 7);
-  if (Date.now() - obj.uploaded.getTime() > days * 86400000) {
+  if (Date.now() > stripExpiry(obj, env)) {
     if (waitUntil) waitUntil(env.PHOTOS.delete(key));
     return notFound();
   }

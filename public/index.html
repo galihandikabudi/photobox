@@ -99,9 +99,30 @@
   .steps { display: flex; gap: 16px; margin: 4px 0 10px; }
   .step { display: flex; align-items: center; gap: 12px; background: var(--glass); border: 1px solid var(--line); border-radius: 999px; padding: 10px 24px 10px 12px; font-size: 22px; font-weight: 700; }
   .step b { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--navy); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .evb { background: rgba(242,140,0,.18); border: 2px solid var(--accent); color: var(--accent-2); border-radius: 999px; padding: 8px 26px; font-size: 26px; font-weight: 800; max-width: 820px; margin-bottom: -6px; }
   .msg { min-height: 1.4em; max-width: 820px; color: var(--danger); font-size: 24px; line-height: 1.4; font-weight: 600; }
   .msg:empty { display: none; }
   .notice { max-width: 760px; font-size: 19px; opacity: .6; line-height: 1.5; }
+  .laybar { display: flex; gap: 12px; flex-wrap: wrap; margin: 2px 0 6px; }
+  .laybar[hidden] { display: none; }
+  .lay { display: flex; align-items: center; gap: 12px; padding: 10px 22px 10px 14px; border-radius: 999px; font-size: 22px; font-weight: 700;
+    background: var(--glass); border: 2px solid var(--line); color: var(--cream); box-shadow: none; }
+  .lay svg { width: 26px; height: 36px; fill: rgba(255,255,255,.55); stroke: none; }
+  .lay.sel { background: rgba(242,140,0,.2); border-color: var(--accent); color: #fff; }
+  .lay.sel svg { fill: var(--accent); }
+  .hero-col { flex: none; display: flex; flex-direction: column; align-items: center; gap: 44px; }
+  .dnav { display: flex; align-items: center; gap: 18px; }
+  .dnav[hidden] { display: none; }
+  .dmid { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 300px; text-align: center; }
+  .dmid b { font-size: 26px; font-weight: 800; }
+  .dmid small { font-size: 17px; opacity: .6; }
+  .ddots { display: flex; gap: 8px; }
+  .ddots i { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,.3); transition: .2s; }
+  .ddots i.on { background: var(--accent); width: 28px; border-radius: 8px; }
+  .hero-strip.slide-l { animation: slideL .35s ease; }
+  .hero-strip.slide-r { animation: slideR .35s ease; }
+  @keyframes slideL { from { opacity: 0; translate: 90px 0; } to { opacity: 1; translate: 0 0; } }
+  @keyframes slideR { from { opacity: 0; translate: -90px 0; } to { opacity: 1; translate: 0 0; } }
   .hero-strip { position: relative; flex: none; transform: rotate(3deg); }
   #heroStrip { width: 288px; height: 864px; display: block; background: #fff; border-radius: 8px;
     box-shadow: 0 40px 90px rgba(0,0,0,.55), 0 0 0 10px rgba(255,255,255,.95); }
@@ -124,7 +145,7 @@
   }
   .dz.sel { border-color: var(--accent); background: rgba(255,255,255,.1); }
   .dz.bad { opacity: .4; }
-  .dz canvas { width: 100px; height: 300px; border-radius: 6px; background: #fff; display: block; }
+  .dz canvas { width: 100px; border-radius: 6px; background: #fff; display: block; }
   .dz span { max-width: 124px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* ---------- foto ---------- */
@@ -141,7 +162,7 @@
   #btnCancel svg { width: 24px; height: 24px; }
   /* 1080 x 710 = tepat 2x jendela foto (540 x 355), jadi preview = hasil jepretan */
   .cam {
-    position: relative; width: 1080px; height: 710px; background: #000; border-radius: 22px; overflow: hidden;
+    position: relative; width: 1080px; height: 710px; flex: none; background: #000; border-radius: 22px; overflow: hidden;
     box-shadow: 0 0 0 6px rgba(255,255,255,.18), 0 40px 90px rgba(0,0,0,.55);
   }
   .cam::before {   /* siku pembidik */
@@ -242,11 +263,13 @@
     <div id="picker" class="picker"></div>
   </div>
   <div class="hero-text">
-    <div class="brand"><img src="icon-192.png" alt=""><div class="badge">SMK MUHAMMADIYAH TODANAN</div></div>
-    <h1>PHOTOBOX</h1>
-    <p class="sub">Abadikan momenmu. Empat foto seru langsung jadi satu strip berframe, siap dibawa pulang.</p>
+    <div class="brand"><img src="icon-192.png" alt=""><div class="badge" id="brandLine">SMK MUHAMMADIYAH TODANAN</div></div>
+    <div id="evBadge" class="evb" hidden></div>
+    <h1 id="heroTitle">PHOTOBOX</h1>
+    <p class="sub" id="heroSub">Abadikan momenmu. Foto-foto seru langsung jadi satu hasil berframe, siap dibawa pulang.</p>
+    <div id="layBar" class="laybar" hidden></div>
     <div class="steps">
-      <div class="step"><b>1</b>Ambil 4 foto</div>
+      <div class="step"><b>1</b><span id="stepShots">Ambil 4 foto</span></div>
       <div class="step"><b>2</b>Scan QR</div>
       <div class="step"><b>3</b>Unduh di HP</div>
     </div>
@@ -258,7 +281,14 @@
     <button id="btnCamRetry" class="ghost" hidden>Coba lagi</button>
     <p class="notice" id="privacy"></p>
   </div>
-  <div class="hero-strip"><canvas id="heroStrip" width="300" height="900"></canvas></div>
+  <div class="hero-col">
+    <div class="hero-strip"><canvas id="heroStrip" width="300" height="900"></canvas></div>
+    <div id="dnav" class="dnav" hidden>
+      <button id="dPrev" class="icon-btn ghost" type="button" aria-label="Frame sebelumnya"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="dmid"><b id="dName"></b><span id="dDots" class="ddots"></span><small>Geser untuk ganti frame</small></div>
+      <button id="dNext" class="icon-btn ghost" type="button" aria-label="Frame berikutnya"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
 </section>
 
 <section id="s-shoot" class="screen">
@@ -268,7 +298,7 @@
   <div class="shoot-main">
     <div class="status-bar">
       <div id="status"></div>
-      <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+      <div class="dots" id="dots"></div>
     </div>
     <div class="cam">
       <video id="video" autoplay playsinline muted></video>
@@ -336,7 +366,6 @@
      Ukuran strip dalam satuan "dasar" 600 x 1800; ubah jika layout frame berbeda. */
   const STAGE = { w: 1920, h: 1080 };
   const CONFIG = {
-    shots: 4,               // jumlah foto per strip (harus sama dengan jumlah jendela di frame)
     countdownFirst: 5,      // hitung mundur foto pertama (detik)
     countdownNext: 3,       // hitung mundur foto berikutnya (detik)
     gapMs: 1200,            // jeda setelah jepret sebelum foto berikutnya
@@ -349,8 +378,6 @@
     backgroundsUrl: '/api/backgrounds',  // daftar desain yang diunggah lewat /admin
     frameUrl: 'frame.png',
     chromaKey: true,        // piksel magenta murni (#FF00FF) di gambar frame dijadikan transparan
-    strip: { w: 600, h: 1800 },
-    slot: { x: 30, w: 540, h: 355, top: 170, gap: 20 },
     print: {
       enabled: true,        // tampilkan tombol Cetak di layar hasil
       sheet: '2up'          // '2up' = kertas foto 4x6 inci berisi 2 strip (dipotong 2x6); 'single' = kertas 2x6 inci
@@ -369,7 +396,25 @@
   const $ = (id) => document.getElementById(id);
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const S = CONFIG.scale;
-  const slotY = (i) => CONFIG.slot.top + i * (CONFIG.slot.h + CONFIG.slot.gap);
+
+  /* Tata letak: kolom x baris jendela foto. Ruang judul 170 di atas, footer 150 di bawah, jarak 30 di tepi dan 20 antar foto. */
+  function makeLayout(id, name, w, h, cols, rows) {
+    const top = 170, foot = 150, edge = 30, gap = 20;
+    const sw = (w - 2 * edge - (cols - 1) * gap) / cols;
+    const sh = (h - top - foot - (rows - 1) * gap) / rows;
+    const slots = [];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) slots.push({ x: edge + c * (sw + gap), y: top + r * (sh + gap), w: sw, h: sh });
+    return { id, name, w, h, n: cols * rows, slot: { w: sw, h: sh }, slots, footTop: h - foot, strip: w / h < 0.5 };
+  }
+  const LAYOUTS = {
+    strip4: makeLayout('strip4', 'Strip 4 foto', 600, 1800, 1, 4),
+    strip3: makeLayout('strip3', 'Strip 3 foto', 600, 1800, 1, 3),
+    strip2: makeLayout('strip2', 'Strip 2 foto', 600, 1800, 1, 2),
+    grid4: makeLayout('grid4', 'Kartu 4 foto', 1200, 1800, 2, 2),
+    grid6: makeLayout('grid6', 'Kartu 6 foto', 1200, 1800, 2, 3)
+  };
+  const LAYOUT_ORDER = ['strip4', 'strip3', 'strip2', 'grid4', 'grid6'];
+  let LAY = LAYOUTS.strip4;
 
   class Cancelled extends Error {}
 
@@ -399,9 +444,28 @@
   let selected = BUILTIN;
   let loadSeq = 0;
 
-  $('privacy').textContent =
-    'Foto diunggah ke server sekolah dan otomatis dihapus dalam ' + CONFIG.retentionDays +
-    ' hari. Dengan menekan Mulai, kamu setuju fotomu diambil.';
+  const DEFAULT_SUB = $('heroSub').textContent;
+  const DEFAULT_TITLE = $('heroTitle').textContent;
+  const DEFAULT_LINE = $('brandLine').textContent;
+  const DEFAULT_BRAND = Object.assign({}, CONFIG.brand);
+  function applyEvent(ev) {
+    CONFIG.brand = {
+      line1: (ev && ev.stripLine1) || DEFAULT_BRAND.line1,
+      title: (ev && ev.stripTitle) || DEFAULT_BRAND.title,
+      footer1: (ev && ev.stripFooter1) || DEFAULT_BRAND.footer1,
+      footer2: (ev && ev.stripFooter2) || DEFAULT_BRAND.footer2
+    };
+    $('heroTitle').textContent = (ev && ev.title) || DEFAULT_TITLE;
+    $('brandLine').textContent = (ev && ev.brandLine) || DEFAULT_LINE;
+    const days = ev ? ev.retentionDays : CONFIG.retentionDays;
+    $('privacy').textContent =
+      'Foto diunggah ke server penyelenggara dan otomatis dihapus dalam ' + days +
+      ' hari. Dengan menekan Mulai, kamu setuju fotomu diambil.';
+    $('evBadge').hidden = !ev;
+    $('evBadge').textContent = ev ? (ev.badge || ev.name) : '';
+    $('heroSub').textContent = ev && ev.welcome ? ev.welcome : DEFAULT_SUB;
+  }
+  applyEvent(null);
 
   function show(name) {
     document.querySelectorAll('.screen').forEach((el) => el.classList.remove('active'));
@@ -488,8 +552,8 @@
 
   function captureFrame() {
     const c = document.createElement('canvas');
-    c.width = CONFIG.slot.w * S;
-    c.height = CONFIG.slot.h * S;
+    c.width = Math.round(LAY.slot.w * S);
+    c.height = Math.round(LAY.slot.h * S);
     drawVideoTo(c);
     return c;
   }
@@ -500,12 +564,16 @@
   let prevText = false;
   let prevRun = 0;
   const liveCanvas = document.createElement('canvas');
-  liveCanvas.width = 270;
-  liveCanvas.height = Math.round(270 * CONFIG.slot.h / CONFIG.slot.w);
+  function sizeLive() {
+    liveCanvas.width = 270;
+    liveCanvas.height = Math.round(270 * LAY.slot.h / LAY.slot.w);
+  }
+  sizeLive();
 
   async function preparePreview() {
-    const W = Math.round(CONFIG.strip.w * PREV_K);
-    const H = Math.round(CONFIG.strip.h * PREV_K);
+    const W = Math.round(LAY.w * PREV_K);
+    const H = Math.round(LAY.h * PREV_K);
+    sizeShootUI();
     let d = selected;
     try {
       prevLayers = await layersFor(d, W, H);
@@ -518,6 +586,21 @@
   }
 
   // Titik kemajuan: terisi = foto selesai, putih = foto yang sedang dibidik.
+  // Ukuran layar kamera dan pratinjau strip mengikuti tata letak yang dipilih.
+  function sizeShootUI() {
+    const k = Math.min(1080 / LAY.slot.w, 760 / LAY.slot.h);
+    const cam = document.querySelector('.cam');
+    cam.style.width = Math.round(LAY.slot.w * k) + 'px';
+    cam.style.height = Math.round(LAY.slot.h * k) + 'px';
+    const cv = $('stripPrev');
+    cv.width = Math.round(LAY.w * PREV_K);
+    cv.height = Math.round(LAY.h * PREV_K);
+    cv.style.height = '960px';
+    cv.style.width = Math.round(960 * LAY.w / LAY.h) + 'px';
+    const dots = $('dots');
+    if (dots.children.length !== LAY.n) dots.innerHTML = '<i></i>'.repeat(LAY.n);
+  }
+
   function setDots() {
     document.querySelectorAll('#dots i').forEach((el, i) => {
       el.classList.toggle('done', i < photos.length);
@@ -545,15 +628,16 @@
     const cv = $('stripPrev');
     if (!prevLayers) return;
     const list = photos.slice();
-    if (liveOn && photos.length < CONFIG.shots && drawVideoTo(liveCanvas)) list[photos.length] = liveCanvas;
+    if (liveOn && photos.length < LAY.n && drawVideoTo(liveCanvas)) list[photos.length] = liveCanvas;
     const ctx = cv.getContext('2d');
     drawStrip(ctx, PREV_K, list, prevLayers, prevText);
     // kilatan putih pada foto yang baru saja masuk ke strip
     const age = performance.now() - flashAt;
     if (flashSlot >= 0 && age < FLASH_MS) {
       const a = 1 - age / FLASH_MS;
-      const x = CONFIG.slot.x * PREV_K, y = slotY(flashSlot) * PREV_K;
-      const w = CONFIG.slot.w * PREV_K, h = CONFIG.slot.h * PREV_K;
+      const sl = LAY.slots[flashSlot];
+      const x = sl.x * PREV_K, y = sl.y * PREV_K;
+      const w = sl.w * PREV_K, h = sl.h * PREV_K;
       ctx.save();
       ctx.fillStyle = 'rgba(255,255,255,' + (0.9 * a * a).toFixed(3) + ')';
       ctx.fillRect(x, y, w, h);
@@ -630,10 +714,10 @@
     return c;
   }
 
-  function drawDefaultFrame() {
+  function drawDefaultFrame(L) {
     const B = CONFIG.brand;
-    const W = CONFIG.strip.w;
-    const H = CONFIG.strip.h;
+    const W = L.w;
+    const H = L.h;
     const c = document.createElement('canvas');
     c.width = W * S;
     c.height = H * S;
@@ -654,37 +738,39 @@
     x.fillStyle = '#fff8e7';
     x.font = '800 72px system-ui, sans-serif';
     x.fillText(B.title, W / 2, 142);
-    const footTop = slotY(CONFIG.shots - 1) + CONFIG.slot.h;
+    const footTop = L.footTop;
     x.fillStyle = '#F28C00';
     x.font = '800 40px system-ui, sans-serif';
     x.fillText(B.footer1, W / 2, footTop + 62);
     x.fillStyle = '#fff8e7';
     x.font = '600 28px system-ui, sans-serif';
     x.fillText(B.footer2, W / 2, footTop + 104);
-    for (let i = 0; i < CONFIG.shots; i++) {
-      const y = slotY(i);
-      x.clearRect(CONFIG.slot.x, y, CONFIG.slot.w, CONFIG.slot.h);
+    for (const sl of L.slots) {
+      x.clearRect(sl.x, sl.y, sl.w, sl.h);
       x.strokeStyle = '#F28C00';
       x.lineWidth = 6;
-      x.strokeRect(CONFIG.slot.x - 3, y - 3, CONFIG.slot.w + 6, CONFIG.slot.h + 6);
+      x.strokeRect(sl.x - 3, sl.y - 3, sl.w + 6, sl.h + 6);
     }
     return c;
   }
 
+  const framePromises = {};
   function getFrame() {
-    if (!framePromise) {
-      framePromise = (async () => {
+    const L = LAY;
+    if (!framePromises[L.id]) {
+      framePromises[L.id] = (async () => {
         try {
+          if (L.id !== 'strip4') throw new Error('frame.png hanya untuk strip 4 foto');
           const img = await loadImage(CONFIG.frameUrl + '?v=' + Date.now());
-          const W = CONFIG.strip.w * S;
-          const H = CONFIG.strip.h * S;
+          const W = L.w * S;
+          const H = L.h * S;
           return CONFIG.chromaKey ? applyChromaKey(img, W, H) : img;
         } catch (e) {
-          return drawDefaultFrame();
+          return drawDefaultFrame(L);
         }
       })();
     }
-    return framePromise;
+    return framePromises[L.id];
   }
 
   const imgCache = new Map();    // id desain -> Promise<Image>
@@ -707,7 +793,7 @@
       if (!CONFIG.chromaKey) return { under: null, over: img };
       const key = d.id + ':' + W + 'x' + H;
       if (!layerCache.has(key)) {
-        if (W === CONFIG.strip.w * S) {
+        if (W === LAY.w * S) {
           // simpan hanya satu kanvas ukuran penuh agar memori tidak membengkak
           const suffix = ':' + W + 'x' + H;
           for (const k of Array.from(layerCache.keys())) if (k.endsWith(suffix)) layerCache.delete(k);
@@ -731,14 +817,20 @@
   // Teks judul & footer untuk desain unggahan (dengan garis tepi tipis agar terbaca di atas gambar apa pun).
   function drawBrandText(ctx, k) {
     const B = CONFIG.brand;
-    const W = CONFIG.strip.w;
-    const footTop = slotY(CONFIG.shots - 1) + CONFIG.slot.h;
+    const W = LAY.w;
+    const footTop = LAY.footTop;
     ctx.save();
     ctx.scale(k, k);
     ctx.textAlign = 'center';
     ctx.lineJoin = 'round';
     const put = (t, y, font, fill) => {
       ctx.font = font;
+      const maxW = W - 50;   // teks panjang diperkecil agar tidak keluar dari strip
+      const w0 = ctx.measureText(t).width;
+      if (w0 > maxW) {
+        const m = font.match(/(\d+)px/);
+        if (m) ctx.font = font.replace(m[0], Math.max(14, Math.floor(m[1] * maxW / w0)) + 'px');
+      }
       ctx.lineWidth = 7;
       ctx.strokeStyle = 'rgba(16,26,71,.65)';
       ctx.strokeText(t, W / 2, y);
@@ -754,16 +846,17 @@
 
   // k = piksel per satuan dasar (2 untuk hasil akhir, sekitar 0,33 untuk pratinjau).
   function drawStrip(ctx, k, photoList, L, showText) {
-    const W = CONFIG.strip.w * k;
-    const H = CONFIG.strip.h * k;
+    const W = LAY.w * k;
+    const H = LAY.h * k;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, W, H);
     if (L.under) drawCover(ctx, L.under, W, H);
-    for (let i = 0; i < CONFIG.shots; i++) {
-      const x = CONFIG.slot.x * k;
-      const y = slotY(i) * k;
-      const w = CONFIG.slot.w * k;
-      const h = CONFIG.slot.h * k;
+    for (let i = 0; i < LAY.n; i++) {
+      const sl = LAY.slots[i];
+      const x = sl.x * k;
+      const y = sl.y * k;
+      const w = sl.w * k;
+      const h = sl.h * k;
       if (photoList[i]) {
         ctx.drawImage(photoList[i], x, y, w, h);
       } else {
@@ -778,8 +871,8 @@
   const textOn = (d) => d.type !== 'builtin' && d.showText;
 
   async function composeStrip() {
-    const W = CONFIG.strip.w * S;
-    const H = CONFIG.strip.h * S;
+    const W = LAY.w * S;
+    const H = LAY.h * S;
     const c = document.createElement('canvas');
     c.width = W;
     c.height = H;
@@ -802,11 +895,35 @@
     try {
       const L = await layersFor(d, cv.width, cv.height);
       if (d !== selected) return;
-      drawStrip(cv.getContext('2d'), cv.width / CONFIG.strip.w, [], L, textOn(d));
+      drawStrip(cv.getContext('2d'), cv.width / LAY.w, [], L, textOn(d));
     } catch (e) { /* gambar desain gagal dimuat: biarkan kosong */ }
   }
 
+  function updateNav() {
+    const ok = designs.filter((x) => !x.broken);
+    $('dnav').hidden = ok.length < 2;
+    $('dName').textContent = selected.name || '';
+    $('dDots').innerHTML = ok.map((x) => '<i' + (x === selected ? ' class="on"' : '') + '></i>').join('');
+  }
+
+  // dir: +1 = berikutnya, -1 = sebelumnya (melingkar, lewati desain rusak)
+  function stepDesign(dir) {
+    const ok = designs.filter((x) => !x.broken);
+    if (ok.length < 2) return;
+    let i = ok.indexOf(selected);
+    if (i < 0) i = 0;
+    selected = ok[(i + dir + ok.length) % ok.length];
+    markSelected();
+    const hs = document.querySelector('.hero-strip');
+    hs.classList.remove('slide-l', 'slide-r');
+    void hs.offsetWidth;
+    hs.classList.add(dir > 0 ? 'slide-l' : 'slide-r');
+  }
+
+  const selByLayout = {};
   function markSelected() {
+    selByLayout[LAY.id] = selected.id;
+    updateNav();
     renderHero();
     document.querySelectorAll('#picker .dz').forEach((b) => {
       b.classList.toggle('sel', b.dataset.id === selected.id);
@@ -817,7 +934,7 @@
     const ctx = canvas.getContext('2d');
     try {
       const L = await layersFor(d, canvas.width, canvas.height);
-      drawStrip(ctx, canvas.width / CONFIG.strip.w, [], L, textOn(d));
+      drawStrip(ctx, canvas.width / LAY.w, [], L, textOn(d));
     } catch (e) {
       d.broken = true;
       btn.classList.add('bad');
@@ -842,7 +959,7 @@
     box.innerHTML = '';
     const many = designs.length > 1;
     $('btnDesign').hidden = !many;
-    if (!many) { togglePicker(false); renderHero(); }
+    if (!many) { togglePicker(false); selByLayout[LAY.id] = selected.id; updateNav(); renderHero(); }
     if (!many) return;
     designs.forEach((d) => {
       const b = document.createElement('button');
@@ -851,7 +968,9 @@
       b.dataset.id = d.id;
       const c = document.createElement('canvas');
       c.width = CONFIG.thumb.w;
-      c.height = CONFIG.thumb.h;
+      c.height = Math.round(CONFIG.thumb.w * LAY.h / LAY.w);
+      c.style.width = '100px';
+      c.style.height = Math.round(100 * LAY.h / LAY.w) + 'px';
       const l = document.createElement('span');
       l.textContent = d.name;
       b.appendChild(c);
@@ -868,25 +987,89 @@
     markSelected();
   }
 
+  /* ====================== TATA LETAK ====================== */
+  let allItems = [];       // desain unggahan (sudah disaring acara)
+  let hideBuiltin = false;
+  let evLayouts = [];
+  let allowedLayouts = ['strip4'];
+
+  function computeLayouts() {
+    const set = evLayouts.length ? evLayouts.slice() : ['strip4'].concat(allItems.map((d) => d.layout));
+    allowedLayouts = LAYOUT_ORDER.filter((id) => set.includes(id));
+    if (!allowedLayouts.length) allowedLayouts = ['strip4'];
+  }
+
+  function designsOf(id) {
+    const items = allItems.filter((d) => d.layout === id);
+    const list = [];
+    if (!(hideBuiltin && items.length)) list.push(BUILTIN);
+    return list.concat(items);
+  }
+
+  function layoutIcon(L) {
+    const k = 26 / L.w;
+    const r = L.slots.map((sl) => '<rect x="' + (sl.x * k).toFixed(1) + '" y="' + (sl.y * k).toFixed(1) + '" width="' + (sl.w * k).toFixed(1) + '" height="' + (sl.h * k).toFixed(1) + '" rx="1"/>').join('');
+    return '<svg viewBox="0 0 26 ' + (L.h * k).toFixed(1) + '" style="width:' + (L.strip ? 14 : 26) + 'px;height:' + (L.strip ? 42 : 39) + 'px" aria-hidden="true">' + r + '</svg>';
+  }
+
+  function renderLayBar() {
+    const bar = $('layBar');
+    bar.hidden = allowedLayouts.length < 2;
+    bar.innerHTML = '';
+    allowedLayouts.forEach((id) => {
+      const L = LAYOUTS[id];
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lay' + (id === LAY.id ? ' sel' : '');
+      b.innerHTML = layoutIcon(L) + '<span>' + L.name + '</span>';
+      b.addEventListener('click', () => { if (id !== LAY.id) setLayout(id); });
+      bar.appendChild(b);
+    });
+  }
+
+  // Terapkan tata letak: ukuran strip hero, daftar desain, teks langkah.
+  function setLayout(id) {
+    if (!allowedLayouts.includes(id)) id = allowedLayouts[0];
+    LAY = LAYOUTS[id];
+    sizeLive();
+    designs = designsOf(id);
+    const want = designs.find((d) => d.id === selByLayout[id]);
+    selected = want || designs[0];
+    const hh = LAY.strip ? 864 : 720;
+    const hw = Math.round(hh * LAY.w / LAY.h);
+    const cv = $('heroStrip');
+    cv.style.width = hw + 'px';
+    cv.style.height = hh + 'px';
+    cv.width = Math.round(hw * 300 / 288);
+    cv.height = Math.round(hh * 300 / 288);
+    $('stepShots').textContent = 'Ambil ' + LAY.n + ' foto';
+    renderLayBar();
+    renderPicker();
+  }
+
   async function loadDesigns() {
     const my = ++loadSeq;
-    let list = [BUILTIN];
+    let items = [];
+    let hide = false;
+    let lays = [];
     try {
       const r = await fetch(CONFIG.backgroundsUrl, { cache: 'no-cache' });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const j = await r.json();
-      const items = Array.isArray(j.items) ? j.items : [];
-      list = [];
-      if (!(j.settings && j.settings.hideBuiltin && items.length)) list.push(BUILTIN);
-      items.forEach((it) => list.push({ id: it.id, name: it.name, type: it.type, showText: !!it.showText, url: it.url }));
+      const raw = Array.isArray(j.items) ? j.items : [];
+      applyEvent(j.event || null);
+      lays = (j.event && Array.isArray(j.event.layouts)) ? j.event.layouts.filter((x) => LAYOUTS[x]) : [];
+      items = raw.map((it) => ({ id: it.id, name: it.name, type: it.type, showText: !!it.showText, url: it.url, layout: LAYOUTS[it.layout] ? it.layout : 'strip4' }));
+      hide = !!(j.settings && j.settings.hideBuiltin);
     } catch (e) {
-      list = [BUILTIN];
+      items = [];
     }
     if (my !== loadSeq) return;
-    designs = list;
-    if (!designs.some((d) => d.id === selected.id)) selected = designs[0];
-    else selected = designs.find((d) => d.id === selected.id);
-    renderPicker();
+    allItems = items;
+    hideBuiltin = hide;
+    evLayouts = lays;
+    computeLayouts();
+    setLayout(allowedLayouts.includes(LAY.id) ? LAY.id : allowedLayouts[0]);
   }
 
   /* ====================== UNGGAH & QR ====================== */
@@ -970,10 +1153,13 @@
       if (idleLeft <= 0) resetToStart();
     }, 1000);
   }
+  let resultLay = LAYOUTS.strip4;
   async function printStrip() {
     if (!stripUrl) return;
-    const two = CONFIG.print.sheet !== 'single';
-    $('pageStyle').textContent = '@media print { @page { size: ' + (two ? '4in' : '2in') + ' 6in; margin: 0; } }';
+    const card = !resultLay.strip;             // kartu 4x6 dicetak satu per lembar
+    const two = !card && CONFIG.print.sheet !== 'single';
+    const pw = card ? 4 : 2;
+    $('pageStyle').textContent = '@media print { @page { size: ' + (two ? 4 : pw) + 'in 6in; margin: 0; } #printSheet img { width: ' + pw + 'in !important; } }';
     const sheet = $('printSheet');
     sheet.innerHTML = '';
     const imgs = [];
@@ -1054,8 +1240,8 @@
         return;
       }
       if (cancelled) throw new Cancelled('batal');
-      for (let i = 0; i < CONFIG.shots; i++) {
-        $('status').textContent = 'Foto ' + (i + 1) + ' dari ' + CONFIG.shots;
+      for (let i = 0; i < LAY.n; i++) {
+        $('status').textContent = 'Foto ' + (i + 1) + ' dari ' + LAY.n;
         await countdown(i === 0 ? CONFIG.countdownFirst : CONFIG.countdownNext);
         const shot = captureFrame();
         photos.push(shot);
@@ -1098,6 +1284,10 @@
     if (stripUrl) URL.revokeObjectURL(stripUrl);
     stripUrl = URL.createObjectURL(currentBlob);
     $('stripImg').src = stripUrl;
+    const ih = LAY.strip ? 1032 : 900;
+    $('stripImg').style.height = ih + 'px';
+    $('stripImg').style.width = Math.round(ih * LAY.w / LAY.h) + 'px';
+    resultLay = LAY;
     show('result');
     $('btnPrint').hidden = !CONFIG.print.enabled;
     await doUpload(sid);
@@ -1125,6 +1315,29 @@
   $('btnResume').addEventListener('click', () => { paused = false; showConfirm(false); });
   $('btnCancelYes').addEventListener('click', () => { showConfirm(false); cancelSession(); });
   $('btnDesign').addEventListener('click', (e) => { e.stopPropagation(); togglePicker(); });
+  $('dPrev').addEventListener('click', () => stepDesign(-1));
+  $('dNext').addEventListener('click', () => stepDesign(1));
+  // Geser (swipe) kiri/kanan di layar awal untuk ganti frame
+  (() => {
+    const el = $('s-start');
+    let sx = 0, sy = 0, st = 0, on = false;
+    el.addEventListener('pointerdown', (e) => {
+      on = !e.target.closest('#pickerWrap, button');
+      sx = e.clientX; sy = e.clientY; st = Date.now();
+    });
+    el.addEventListener('pointerup', (e) => {
+      if (!on) return;
+      on = false;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && Date.now() - st < 900) stepDesign(dx < 0 ? 1 : -1);
+    });
+    el.addEventListener('pointercancel', () => { on = false; });
+    document.addEventListener('keydown', (e) => {
+      if (!el.classList.contains('active')) return;
+      if (e.key === 'ArrowLeft') stepDesign(-1);
+      else if (e.key === 'ArrowRight') stepDesign(1);
+    });
+  })();
   document.addEventListener('click', (e) => {
     if (!$('pickerWrap').hidden && !e.target.closest('#pickerWrap')) togglePicker(false);
   });

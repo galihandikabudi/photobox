@@ -1,4 +1,5 @@
 // GET /d/:id  — halaman unduh yang dibuka tamu setelah scan QR
+import { stripExpiry } from '../_lib/common.js';
 const ID_RE = /^[a-hj-km-np-z2-9]{10}$/;
 
 const STYLE = `
@@ -69,8 +70,7 @@ export async function onRequestGet({ params, env }) {
   const head = await env.PHOTOS.head(`strips/${id}.jpg`);
   if (!head) return missing();
 
-  const days = Number(env.RETENTION_DAYS || 7);
-  const expires = new Date(head.uploaded.getTime() + days * 86400000);
+  const expires = new Date(stripExpiry(head, env));
   if (Date.now() > expires.getTime()) return missing();
 
   const src = `/api/photo/${id}`;

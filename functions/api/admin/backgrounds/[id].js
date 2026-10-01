@@ -1,6 +1,6 @@
 // PATCH  /api/admin/backgrounds/:id  {name?, type?, showText?}  — ubah pengaturan desain
 // DELETE /api/admin/backgrounds/:id                               — hapus desain
-import { BG_PREFIX, BG_ID_RE, json, requireAdmin, toItem } from '../../../_lib/common.js';
+import { BG_PREFIX, BG_ID_RE, LAYOUT_IDS, json, requireAdmin, toItem } from '../../../_lib/common.js';
 
 function validId(params) {
   const id = String(params.id || '');
@@ -23,6 +23,7 @@ export async function onRequestPatch({ request, params, env }) {
   const meta = { ...(obj.customMetadata || {}) };
   if (typeof body.name === 'string') meta.name = body.name.trim().slice(0, 40) || meta.name || 'Desain';
   if (body.type === 'frame' || body.type === 'latar') meta.type = body.type;
+  if (LAYOUT_IDS.includes(body.layout)) meta.layout = body.layout;
   if (typeof body.showText === 'boolean') meta.showText = body.showText ? '1' : '0';
 
   // R2 tidak bisa mengubah metadata di tempat, jadi objek ditulis ulang dengan isi yang sama.
