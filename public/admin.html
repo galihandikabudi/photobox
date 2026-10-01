@@ -104,11 +104,24 @@
   .uq .rm { min-width: 44px; min-height: 44px; border-radius: 10px; padding: 0; }
   @media (max-width: 560px) { .uq { grid-template-columns: 56px 1fr; } .uq .rm { grid-column: 2; justify-self: end; } .uq .th { width: 56px; height: 76px; } }
   #pane-desain .split { grid-template-columns: 1fr; }
-  body.wide main, body.wide .topbar-in { max-width: none; }
-  body.wide main { padding-left: clamp(12px, 2vw, 32px); padding-right: clamp(12px, 2vw, 32px); }
+  main, .topbar-in { max-width: none; }
+  main { padding-left: clamp(12px, 2vw, 32px); padding-right: clamp(12px, 2vw, 32px); }
   .dropzone { min-height: 150px; }
   .upq { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); }
   #pane-desain .gal { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .dsum { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: rgba(0,0,0,.18); }
+  .dsum .dbtn { min-height: 52px; padding: 0 22px; font-size: 15px; }
+  .dsum .dth { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .dsum .dth img { height: 64px; width: auto; border-radius: 6px; background: #0b1238; border: 1px solid var(--line); }
+  .dsum .dtxt { font-size: 13.5px; color: var(--muted); }
+  #dlgPick { position: fixed; inset: 0; z-index: 70; display: none; flex-direction: column; background: #0c1442; }
+  #dlgPick.on { display: flex; }
+  #dlgPick .ph { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 14px clamp(12px, 2vw, 32px); border-bottom: 1px solid var(--line); background: #14205f; }
+  #dlgPick .ph h2 { margin: 0; flex: 1 1 240px; }
+  #dlgPick .ph button { min-height: 48px; }
+  #dlgPick .pf { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px clamp(12px, 2vw, 32px) 0; }
+  #dlgPick .pg { flex: 1; overflow: auto; padding: 14px clamp(12px, 2vw, 32px) 40px; display: grid; gap: 14px; align-content: start; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); -webkit-overflow-scrolling: touch; }
+  #dlgPick .tile .ck { display: flex; }
   .seltools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
   .seltools button { min-height: 46px; }
   .seltools .grow { flex: 1; }
@@ -953,17 +966,72 @@
 
   function chipList(container, selected) {
     container.innerHTML = '';
+    if (!designList.length) { container.innerHTML = '<span class="hint">Belum ada desain unggahan (frame bawaan dipakai).</span>'; return; }
+    const store = document.createElement('div'); store.hidden = true;
     designList.forEach((d) => {
-      const l = document.createElement('label');
-      l.className = 'chip';
       const c = document.createElement('input');
-      c.type = 'checkbox';
-      c.value = d.id;
-      c.checked = selected.includes(d.id);
-      l.append(c, document.createTextNode(d.name + ' · ' + layName(d.layout)));
-      container.appendChild(l);
+      c.type = 'checkbox'; c.value = d.id; c.checked = selected.includes(d.id);
+      store.appendChild(c);
     });
-    if (!designList.length) container.innerHTML = '<span class="hint">Belum ada desain unggahan (frame bawaan dipakai).</span>';
+    const sum = document.createElement('div'); sum.className = 'dsum';
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'dbtn'; btn.textContent = 'Pilih desain strip…';
+    const th = document.createElement('div'); th.className = 'dth';
+    const tx = document.createElement('span'); tx.className = 'dtxt';
+    sum.append(btn, th, tx);
+    container.append(store, sum);
+    const refresh = () => {
+      const ids = picked(store);
+      th.innerHTML = '';
+      ids.slice(0, 8).forEach((id) => { const d = designList.find((x) => x.id === id); if (!d) return; const im = document.createElement('img'); im.src = d.url; im.alt = d.name; im.loading = 'lazy'; th.appendChild(im); });
+      if (ids.length > 8) { const m = document.createElement('span'); m.className = 'dtxt'; m.textContent = '+' + (ids.length - 8); th.appendChild(m); }
+      tx.textContent = ids.length ? ids.length + ' dari ' + designList.length + ' desain dipilih' : 'Tidak ada yang dipilih: semua ' + designList.length + ' desain tersedia';
+      btn.textContent = ids.length ? 'Ubah pilihan desain…' : 'Pilih desain strip…';
+    };
+    btn.addEventListener('click', () => openPicker(store, refresh));
+    refresh();
+  }
+  // Overlay layar penuh: pilih desain acara dengan pratinjau frame
+  function openPicker(store, done) {
+    let dlg = document.getElementById('dlgPick');
+    if (!dlg) {
+      dlg = document.createElement('div'); dlg.id = 'dlgPick';
+      dlg.innerHTML = '<div class="ph"><h2>Pilih desain strip untuk acara</h2><button type="button" class="ghost" data-a="all">Pilih semua yang tampil</button><button type="button" class="ghost" data-a="none">Kosongkan</button><button type="button" data-a="ok">Selesai</button></div><div class="pf"></div><div class="pg"></div>';
+      document.body.appendChild(dlg);
+    }
+    let filt = 'all', cb = done, box = store;
+    const grid = dlg.querySelector('.pg'), fb = dlg.querySelector('.pf'), h = dlg.querySelector('h2');
+    const boxes = () => new Map([...box.querySelectorAll('input')].map((c) => [c.value, c]));
+    const close = () => { dlg.classList.remove('on'); document.body.style.overflow = ''; cb(); };
+    const render = () => {
+      const bm = boxes();
+      const present = LAYOUTS.filter((l) => designList.some((d) => (d.layout || 'strip4') === l[0]));
+      fb.innerHTML = ''; fb.hidden = present.length < 2;
+      if (filt !== 'all' && !present.some((l) => l[0] === filt)) filt = 'all';
+      [['all', 'Semua (' + designList.length + ')']].concat(present.map((l) => [l[0], layName(l[0]) + ' (' + designList.filter((d) => (d.layout || 'strip4') === l[0]).length + ')'])).forEach(([id, label]) => {
+        const c = document.createElement('button'); c.type = 'button'; c.className = 'chip' + (filt === id ? ' on' : ''); c.textContent = label;
+        c.style.minHeight = '44px'; c.addEventListener('click', () => { filt = id; render(); }); fb.appendChild(c);
+      });
+      const n = [...bm.values()].filter((c) => c.checked).length;
+      h.textContent = 'Pilih desain strip untuk acara · ' + (n ? n + ' dipilih' : 'semua tersedia (belum ada yang dipilih)');
+      grid.innerHTML = '';
+      designList.filter((d) => filt === 'all' || (d.layout || 'strip4') === filt).forEach((d) => {
+        const t = document.createElement('button'); t.type = 'button'; t.className = 'tile' + (bm.get(d.id) && bm.get(d.id).checked ? ' picked' : '');
+        const tp = document.createElement('div'); tp.className = 'tp'; const im = document.createElement('img'); im.src = d.url; im.alt = d.name; im.loading = 'lazy'; tp.appendChild(im);
+        const nm = document.createElement('b'); nm.textContent = d.name;
+        const sm = document.createElement('small'); sm.textContent = layName(d.layout) + ' · ' + (d.type === 'frame' ? 'Frame' : 'Latar');
+        const ck = document.createElement('span'); ck.className = 'ck'; ck.textContent = '✓';
+        t.append(tp, nm, sm, ck);
+        t.addEventListener('click', () => { const c = bm.get(d.id); if (c) { c.checked = !c.checked; render(); } });
+        grid.appendChild(t);
+      });
+    };
+    dlg.onclick = (e) => {
+      const a = e.target.closest('button[data-a]'); if (!a) return;
+      if (a.dataset.a === 'ok') close();
+      else { const bm = boxes(); designList.forEach((d) => { if (filt === 'all' || (d.layout || 'strip4') === filt) { const c = bm.get(d.id); if (c) c.checked = a.dataset.a === 'all'; } }); render(); }
+    };
+    if (!dlg.dataset.esc) { dlg.dataset.esc = '1'; document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dlg.classList.contains('on')) dlg.querySelector('[data-a=ok]').click(); }); }
+    render(); dlg.classList.add('on'); document.body.style.overflow = 'hidden'; grid.scrollTop = 0;
   }
   const picked = (container) => Array.from(container.querySelectorAll('input:checked')).map((c) => c.value);
 
@@ -1152,7 +1220,6 @@
     t.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x === t));
       document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('on', p.id === 'pane-' + t.dataset.tab));
-      document.body.classList.toggle('wide', t.dataset.tab === 'desain');
     });
   });
 
