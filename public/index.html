@@ -1671,8 +1671,27 @@
     }, 1000);
   }
   let resultLay = LAYOUTS.strip4;
+  // Aplikasi di layar utama iPad (mode standalone): window.print() sering tidak membuka dialog.
+  // Jalur cadangan: lembar bagikan iOS, yang punya aksi "Cetak" (AirPrint).
+  const isStandalone = () => window.navigator.standalone === true ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  async function printViaShare() {
+    if (!currentBlob || !navigator.canShare) return false;
+    try {
+      const file = new File([currentBlob], 'photobox.jpg', { type: currentBlob.type || 'image/jpeg' });
+      if (!navigator.canShare({ files: [file] })) return false;
+      stopIdle();
+      await navigator.share({ files: [file] });
+      startIdle();
+      return true;
+    } catch (e) {
+      startIdle();
+      return e && e.name === 'AbortError';   // dibatalkan pengguna = tetap dianggap berhasil dibuka
+    }
+  }
   async function printStrip() {
     if (!stripUrl) return;
+    if (isStandalone() && await printViaShare()) return;
     const card = !resultLay.strip;             // kartu 4x6 dicetak satu per lembar
     const two = !card && CONFIG.print.sheet !== 'single';
     const pw = card ? 4 : 2;
