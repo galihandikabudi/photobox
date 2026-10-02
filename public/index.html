@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#101A47">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Photobox">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -220,6 +221,48 @@
     font-size: 320px; font-weight: 800; color: #fff; text-shadow: 0 8px 40px rgba(0,0,0,.6); pointer-events: none;
   }
   #count.pop { animation: pop .9s ease-out; }
+  /* ===== suasana imersif saat foto ===== */
+  #s-shoot { isolation: isolate; overflow: hidden; }
+  #s-shoot::before, #s-shoot::after {      /* cahaya latar yang bergerak pelan */
+    content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(90px); opacity: .55;
+    width: 1100px; height: 1100px; animation: aura 14s ease-in-out infinite alternate;
+  }
+  #s-shoot::before { left: -300px; top: -380px; background: radial-gradient(circle, rgba(242,140,0,.55), transparent 65%); }
+  #s-shoot::after { right: -320px; bottom: -420px; background: radial-gradient(circle, var(--glow2, rgba(88,120,255,.6)), transparent 65%); animation-delay: -7s; }
+  @keyframes aura { from { transform: translate(0,0) scale(1); } to { transform: translate(120px,80px) scale(1.2); } }
+  #s-shoot.flashing::before, #s-shoot.flashing::after { opacity: .95; transition: opacity .1s; }
+
+  .shoot-main .status-bar { height: auto; gap: 26px; padding: 12px 34px; border-radius: 999px;
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  #status { font-size: 40px; }
+  .dots i { width: 22px; height: 22px; }
+  .dots i.done { box-shadow: 0 0 14px rgba(242,140,0,.8); }
+  .cam { border-radius: 30px; box-shadow: 0 0 0 3px rgba(255,255,255,.22), 0 0 70px rgba(242,140,0,.28), 0 40px 90px rgba(0,0,0,.55); }
+  .cam::after {   /* vinyet halus agar fokus ke wajah */
+    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(5,10,40,.55) 100%);
+  }
+  .cam::before { animation: corners 1.6s ease-in-out infinite; }
+  @keyframes corners { 0%,100% { inset: 26px; opacity: .85; } 50% { inset: 36px; opacity: 1; } }
+  .cam.last::before { --c: #fff; animation-duration: .5s; }
+  #ringBox { position: absolute; left: 50%; top: 50%; width: 440px; height: 440px; margin: -220px 0 0 -220px; z-index: 3; pointer-events: none; opacity: 0; }
+  #ringBox.on { opacity: 1; }
+  #ringBox svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+  #ringBox circle { fill: rgba(8,14,44,.38); stroke-width: 14; }
+  #ringBox .trk { stroke: rgba(255,255,255,.22); }
+  #ringBox .prg { stroke: var(--accent-2); fill: none; stroke-linecap: round; stroke-dasharray: 1131; stroke-dashoffset: 0; filter: drop-shadow(0 0 14px rgba(242,140,0,.9)); }
+  #ringBox.run .prg { animation: drain 1s linear forwards; }
+  #ringBox.lastsec .prg { stroke: #fff; filter: drop-shadow(0 0 18px #fff); }
+  @keyframes drain { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 1131; } }
+  #count { text-shadow: 0 0 60px rgba(242,140,0,.9), 0 8px 40px rgba(0,0,0,.6); }
+  #cue { position: absolute; left: 0; right: 0; bottom: 44px; z-index: 3; text-align: center; font-size: 56px; font-weight: 800; color: #fff;
+    letter-spacing: 2px; text-shadow: 0 4px 24px rgba(0,0,0,.7); pointer-events: none; opacity: 0; transform: translateY(18px); transition: opacity .3s, transform .3s; }
+  #cue.on { opacity: 1; transform: none; }
+  #cue.big { font-size: 78px; color: var(--accent-2); }
+  #freeze.on { animation: snap .45s cubic-bezier(.2,.9,.3,1.2); }
+  @keyframes snap { from { transform: scale(1.06); filter: brightness(1.6); } to { transform: none; filter: none; } }
+  .strip-wrap { box-shadow: 0 0 60px rgba(242,140,0,.25), 0 30px 70px rgba(0,0,0,.45); }
+  #btnCancel { opacity: .7; font-size: 22px; padding: 12px 26px; }
   @keyframes pop { 0% { transform: scale(1.7); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(.85); opacity: .85; } }
   #flash { position: absolute; inset: 0; z-index: 4; background: #fff; opacity: 0; pointer-events: none; transition: opacity .35s ease-out; }
   #flash.on { opacity: .95; transition: none; }
@@ -412,7 +455,9 @@
     <div class="cam">
       <video id="video" autoplay playsinline muted></video>
       <canvas id="freeze" width="1080" height="710"></canvas>
+      <div id="ringBox"><svg viewBox="0 0 400 400"><circle class="trk" cx="200" cy="200" r="180"/><circle class="prg" cx="200" cy="200" r="180"/></svg></div>
       <div id="count"></div>
+      <div id="cue"></div>
       <div id="flash"></div>
     </div>
   </div>
@@ -504,6 +549,7 @@
       enabled: true,        // tampilkan tombol Cetak di layar hasil
       sheet: '2up'          // '2up' = kertas foto 4x6 inci berisi 2 strip (dipotong 2x6); 'single' = kertas 2x6 inci
     },
+    sound: true,                         // detak hitung mundur dan bunyi rana
     thumb: { w: 200, h: 600 },           // ukuran kanvas pratinjau desain (tampil 100 x 300)
     brand: {
       line1: 'SMK MUHAMMADIYAH TODANAN',
@@ -613,6 +659,22 @@
     return f && FONT_NAME[f] && f !== 'jakarta' ? f : '';
   };
   const stripFam = () => (stripFontId() ? '"' + FONT_NAME[stripFontId()] + '"' : '') + (stripFontId() ? ', ' : '') + 'system-ui, sans-serif';
+  // Perkecil font bila huruf (terutama font script yang ascender/descender-nya tinggi) keluar dari pita teksnya,
+  // sehingga judul tidak menimpa baris di atas atau jendela foto di bawahnya.
+  function fitFont(ctx, text, font, maxW, maxAsc, maxDesc) {
+    const m = font.match(/(\d+)px/);
+    if (!m) return font;
+    let size = +m[1];
+    for (let i = 0; i < 40 && size > 14; i++) {
+      ctx.font = font.replace(m[0], size + 'px');
+      const t = ctx.measureText(text);
+      const asc = t.actualBoundingBoxAscent, desc = t.actualBoundingBoxDescent;
+      const okV = !(asc > 0) || (asc <= maxAsc && desc <= maxDesc);
+      if (t.width <= maxW && okV) break;
+      size = Math.floor(size * 0.95);
+    }
+    return font.replace(m[0], size + 'px');
+  }
   async function ensureStripFont() {
     const id = stripFontId();
     if (!id || !document.fonts) return;
@@ -635,7 +697,14 @@
   const mix = (h, t, a) => '#' + hexRGB(h).map((v) => Math.round(v + (t - v) * a).toString(16).padStart(2, '0')).join('');
   function applyBg(c) {
     const st = $('stage');
-    if (!/^#[0-9a-f]{6}$/i.test(c || '')) { st.style.background = ''; return; }
+    // warna di balik status bar iPad & tepi layar mengikuti warna latar acara
+    const edge = /^#[0-9a-f]{6}$/i.test(c || '') ? mix(c, 255, .1) : '';
+    document.documentElement.style.background = edge;
+    document.body.style.background = edge;
+    const tc = document.querySelector('meta[name="theme-color"]');
+    if (tc) tc.setAttribute('content', edge || '#101A47');
+    if (!/^#[0-9a-f]{6}$/i.test(c || '')) { st.style.background = ''; st.style.removeProperty('--glow2'); return; }
+    st.style.setProperty('--glow2', mix(c, 255, .4) + 'b3');   // cahaya latar mengikuti warna latar acara
     st.style.background = 'radial-gradient(900px 700px at 78% 18%, ' + mix(c, 255, .16) + '99, transparent 70%), linear-gradient(160deg, ' + mix(c, 255, .1) + ' 0%, ' + c + ' 55%, ' + mix(c, 0, .35) + ' 100%)';
   }
   function applyEvent(ev) {
@@ -864,23 +933,74 @@
     }
   }
 
-  async function countdown(n) {
-    const el = $('count');
+  /* suara kecil (opsional): detak hitung mundur dan bunyi rana */
+  let audioCtx = null;
+  function ensureAudio() {
+    try {
+      if (CONFIG.sound === false) return;
+      if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audioCtx = new AC(); }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) { /* tanpa suara */ }
+  }
+  function beep(freq, dur, vol) {
+    try {
+      if (!audioCtx || CONFIG.sound === false) return;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol || .15, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime + dur);
+    } catch (e) { /* tanpa suara */ }
+  }
+  function shutterSound() {
+    try {
+      if (!audioCtx || CONFIG.sound === false) return;
+      const len = Math.floor(audioCtx.sampleRate * 0.14), buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+      const src = audioCtx.createBufferSource(), g = audioCtx.createGain();
+      src.buffer = buf; g.gain.value = .35; src.connect(g); g.connect(audioCtx.destination); src.start();
+    } catch (e) { /* tanpa suara */ }
+  }
+
+  function setCue(text, big) {
+    const c = $('cue');
+    c.textContent = text || '';
+    c.classList.toggle('big', !!big);
+    c.classList.toggle('on', !!text);
+  }
+
+  async function countdown(n, idx) {
+    const el = $('count'), ring = $('ringBox'), cam = document.querySelector('.cam');
+    const cues = ['Bersiap!', 'Pose bebas!', 'Gaya baru!', 'Sekali lagi!', 'Satu lagi!', 'Yang terakhir!'];
     for (let i = n; i >= 1; i--) {
+      const last = i === 1;
       el.textContent = i;
       el.classList.remove('pop');
+      ring.classList.remove('run');
       void el.offsetWidth;
       el.classList.add('pop');
+      ring.classList.add('on', 'run');
+      ring.classList.toggle('lastsec', last);
+      cam.classList.toggle('last', last);
+      setCue(last ? 'Senyum!' : (i === n ? cues[Math.min(idx || 0, cues.length - 1)] : ''), last);
+      beep(last ? 988 : 660, last ? .22 : .12);
       await wait(1000);
     }
     el.textContent = '';
     el.classList.remove('pop');
+    ring.classList.remove('on', 'run', 'lastsec');
+    cam.classList.remove('last');
+    setCue('');
   }
 
   function flash() {
-    const f = $('flash');
+    const f = $('flash'), sc = $('s-shoot');
+    shutterSound();
     f.classList.add('on');
+    sc.classList.add('flashing');
     requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove('on')));
+    setTimeout(() => sc.classList.remove('flashing'), 350);
   }
 
   /* ====================== FRAME, LATAR & STRIP ====================== */
@@ -928,10 +1048,10 @@
     x.strokeRect(12, 12, W - 24, H - 24);
     x.textAlign = 'center';
     x.fillStyle = '#F28C00';
-    x.font = '700 27px ' + stripFam();
+    x.font = fitFont(x, B.line1, '700 27px ' + stripFam(), W - 50, 30, 12);
     x.fillText(B.line1, W / 2, 68);
     x.fillStyle = '#fff8e7';
-    x.font = '800 72px ' + stripFam();
+    x.font = fitFont(x, B.title, '800 72px ' + stripFam(), W - 50, 56, 22);
     x.fillText(B.title, W / 2, 142);
     const footTop = L.footTop;
     x.fillStyle = '#F28C00';
@@ -1020,7 +1140,9 @@
     ctx.scale(k, k);
     ctx.textAlign = 'center';
     ctx.lineJoin = 'round';
-    const put = (t, y, font, fill) => {
+    const put = (t, y, font, fill, asc, desc) => {
+      ctx.font = font;
+      if (asc) font = fitFont(ctx, t, font, W - 50, asc, desc);
       ctx.font = font;
       const maxW = W - 50;   // teks panjang diperkecil agar tidak keluar dari strip
       const w0 = ctx.measureText(t).width;
@@ -1034,8 +1156,8 @@
       ctx.fillStyle = fill;
       ctx.fillText(t, W / 2, y);
     };
-    put(B.line1, 68, '700 27px ' + stripFam(), '#F28C00');
-    put(B.title, 142, '800 72px ' + stripFam(), '#fff8e7');
+    put(B.line1, 68, '700 27px ' + stripFam(), '#F28C00', 30, 12);
+    put(B.title, 142, '800 72px ' + stripFam(), '#fff8e7', 56, 22);
     put(B.footer1, footTop + 62, '800 40px ' + stripFam(), '#F28C00');
     put(B.footer2, footTop + 104, '600 28px ' + stripFam(), '#fff8e7');
     ctx.restore();
@@ -1756,6 +1878,7 @@
     cancelled = false;
     paused = false;
     requestWakeLock();
+    ensureAudio();
     try {
       if (!(await initCamera())) { busy = false; show('start'); return; }
       photos = [];
@@ -1779,7 +1902,7 @@
       if (cancelled) throw new Cancelled('batal');
       for (let i = 0; i < LAY.n; i++) {
         $('status').textContent = 'Foto ' + (i + 1) + ' dari ' + LAY.n;
-        await countdown(i === 0 ? CONFIG.countdownFirst : CONFIG.countdownNext);
+        await countdown(i === 0 ? CONFIG.countdownFirst : CONFIG.countdownNext, i);
         const shot = captureFrame();
         photos.push(shot);
         liveOn = false;              // strip menampilkan foto yang sudah jadi (diam), bukan kamera
