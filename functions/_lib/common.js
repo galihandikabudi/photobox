@@ -157,6 +157,8 @@ export function cleanEvent(raw, defaults) {
     stripFooter1: txt(raw.stripFooter1 ?? defaults.stripFooter1, 30),
     stripFooter2: txt(raw.stripFooter2 ?? defaults.stripFooter2, 30),
     styles: cleanStyles(raw.styles ?? defaults.styles),
+    // warna latar layar kiosk (#rrggbb; kosong = bawaan)
+    bgColor: (() => { const c = raw.bgColor ?? defaults.bgColor; return typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c) ? c.toLowerCase() : ''; })(),
     albumToken: raw.albumToken || defaults.albumToken,
     created: raw.created || defaults.created || Date.now()
   };
@@ -219,12 +221,85 @@ export async function listStrips(env, max = 20000) {
     for (const o of res.objects) {
       const id = o.key.slice('strips/'.length).replace(/\.jpg$/, '');
       if (!STRIP_ID_RE.test(id)) continue;
+      const m = o.customMetadata || {};
+      const taken = Number(m.taken);
       all.push({
-        id, size: o.size, uploaded: new Date(o.uploaded).getTime(),
-        expires: stripExpiry(o, env), event: (o.customMetadata && o.customMetadata.event) || ''
+        id, size: o.size, uploaded: Number.isFinite(taken) && taken > 0 ? taken : new Date(o.uploaded).getTime(),
+        expires: stripExpiry(o, env), event: m.event || '', layout: m.layout || '', design: m.design || ''
       });
     }
     cursor = res.truncated ? res.cursor : undefined;
   } while (cursor && all.length < max);
   return all;
+}
+
+
+/* ---------------- Penyimpanan: batas, peringatan, hapus otomatis ---------------- */
+export const STORAGE_CFG_KEY = 'settings/storage.json';
+export const CLEAN_MARK_KEY = 'settings/_lastclean';
+const DEFAULT_STORAGE = { quotaMB: 10240, warnPct: 80, autoOldest: false };   // 10 GB = kuota gratis R2
+
+export function cleanStorageCfg(v) {
+  const o = v && typeof v === 'object' ? v : {};
+  const q = Number(o.quotaMB), w = Number(o.warnPct);
+  return {
+    quotaMB: Number.isFinite(q) ? Math.min(10485760, Math.max(100, Math.round(q))) : DEFAULT_STORAGE.quotaMB,
+    warnPct: Number.isFinite(w) ? Math.min(95, Math.max(50, Math.round(w))) : DEFAULT_STORAGE.warnPct,
+    autoOldest: !!o.autoOldest
+  };
+}
+
+export async function readStorageCfg(env) {
+  try {
+    const o = await env.PHOTOS.get(STORAGE_CFG_KEY);
+    return o ? cleanStorageCfg(JSON.parse(await o.text())) : cleanStorageCfg(null);
+  } catch (e) { return cleanStorageCfg(null); }
+}
+
+// Menghitung pemakaian bucket per kelompok. Hanya membaca daftar objek (tanpa mengunduh isi).
+export async function measureStorage(env, cfg) {
+  const groups = { strips: { count: 0, bytes: 0 }, designs: { count: 0, bytes: 0 }, other: { count: 0, bytes: 0 } };
+  let cursor;
+  do {
+    const res = await env.PHOTOS.list({ cursor, limit: 1000 });
+    for (const o of res.objects) {
+      const g = o.key.startsWith('strips/') ? groups.strips : (o.key.startsWith('backgrounds/') && !o.key.endsWith('.json')) ? groups.designs : groups.other;
+      g.count++; g.bytes += o.size;
+    }
+    cursor = res.truncated ? res.cursor : undefined;
+  } while (cursor);
+  const used = groups.strips.bytes + groups.designs.bytes + groups.other.bytes;
+  const quota = cfg.quotaMB * 1048576;
+  const pct = quota ? Math.round((used / quota) * 1000) / 10 : 0;
+  const level = pct >= 95 ? 'critical' : pct >= cfg.warnPct ? 'warn' : 'ok';
+  return { used, quota, pct, level, groups };
+}
+
+// Hapus otomatis: (1) foto yang sudah kedaluwarsa; (2) bila diaktifkan dan pemakaian >= 95%, foto terlama
+// sampai pemakaian turun ke 85%. Dibatasi sekali per 10 menit agar hemat operasi baca.
+export async function autoCleanup(env, force = false) {
+  const mark = await env.PHOTOS.head(CLEAN_MARK_KEY);
+  const last = mark ? Number(mark.customMetadata && mark.customMetadata.t) : 0;
+  if (!force && last && Date.now() - last < 600000) return { skipped: true };
+  await env.PHOTOS.put(CLEAN_MARK_KEY, '', { customMetadata: { t: String(Date.now()) } });
+  const cfg = await readStorageCfg(env);
+  const now = Date.now();
+  let strips = await listStrips(env);
+  const expired = strips.filter((s) => s.expires < now);
+  let freed = 0, deleted = 0, deletedOldest = 0;
+  for (let i = 0; i < expired.length; i += 500) await env.PHOTOS.delete(expired.slice(i, i + 500).map((s) => `strips/${s.id}.jpg`));
+  expired.forEach((s) => { freed += s.size; deleted++; });
+  if (cfg.autoOldest) {
+    const m = await measureStorage(env, cfg);
+    if (m.pct >= 95) {
+      const target = cfg.quotaMB * 1048576 * 0.85;
+      let used = m.used;
+      const oldest = strips.filter((s) => s.expires >= now).sort((a, b) => a.uploaded - b.uploaded);
+      const del = [];
+      for (const s of oldest) { if (used <= target) break; del.push(s); used -= s.size; }
+      for (let i = 0; i < del.length; i += 500) await env.PHOTOS.delete(del.slice(i, i + 500).map((s) => `strips/${s.id}.jpg`));
+      del.forEach((s) => { freed += s.size; deletedOldest++; });
+    }
+  }
+  return { deleted, deletedOldest, freed };
 }

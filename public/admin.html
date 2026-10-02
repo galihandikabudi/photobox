@@ -49,7 +49,7 @@
 
   /* formulir */
   label { display: block; font-size: 13px; font-weight: 700; margin: 14px 0 6px; color: var(--cream); }
-  input[type=text], input[type=password], select, input[type=file] {
+  input[type=text], input[type=password], input[type=number], select, input[type=file] {
     width: 100%; font: inherit; color: var(--cream); background: rgba(0,0,0,.28); border: 1px solid var(--line);
     border-radius: 10px; padding: 11px 13px; outline: none; transition: border-color .15s, box-shadow .15s; }
   input:focus, select:focus { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(242,140,0,.25); }
@@ -109,6 +109,21 @@
   .dropzone { min-height: 150px; }
   .upq { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); }
   #pane-desain .gal { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .split2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+  .stats .stat { align-self: stretch; }
+  .stbar { height: 12px; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; display: flex; margin: 8px 0 4px; }
+  .stbar i { display: block; height: 100%; }
+  .stbar .s1 { background: var(--accent); } .stbar .s2 { background: #3dc7d8; } .stbar .s3 { background: #9aa6d6; }
+  .stbar.warn .s1 { background: #f5c04a; } .stbar.critical .s1 { background: #ff6b6b; }
+  .stleg { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12.5px; color: var(--muted); }
+  .stleg b { color: var(--cream); }
+  #storBanner { display: none; margin-bottom: 18px; padding: 14px 18px; border-radius: 14px; border: 1px solid #f5c04a; background: rgba(245,192,74,.14); line-height: 1.5; font-size: 14.5px; }
+  #storBanner.critical { border-color: #ff6b6b; background: rgba(255,107,107,.16); }
+  #storBanner.on { display: block; }
+  #storBanner .row { margin-top: 10px; }
+  .stat .stmini { height: 6px; border-radius: 999px; background: rgba(255,255,255,.14); margin-top: 8px; overflow: hidden; }
+  .stat .stmini i { display: block; height: 100%; background: var(--accent); }
+  .stat.warn .stmini i { background: #f5c04a; } .stat.critical .stmini i { background: #ff6b6b; }
   .dsum { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: rgba(0,0,0,.18); }
   .dsum .dbtn { min-height: 52px; padding: 0 22px; font-size: 15px; }
   .dsum .dth { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
@@ -225,8 +240,9 @@
     <div class="stats" style="margin-bottom:20px">
       <div class="stat"><small>Desain</small><strong id="statDesign">-</strong></div>
       <div class="stat"><small>Foto tamu</small><strong id="statPhotos">-</strong></div>
-      <div class="stat"><small>Penyimpanan</small><strong id="statSize">-</strong></div>
+      <div class="stat" id="statStor"><small>Penyimpanan</small><strong id="statSize">-</strong><div class="stmini"><i id="statStorBar" style="width:0"></i></div></div>
     </div>
+    <div id="storBanner" role="alert"></div>
 
     <nav class="tabs" role="tablist">
       <button class="tab on" data-tab="acara" type="button">Acara</button>
@@ -356,6 +372,32 @@
         <p class="sub">Berlaku saat kiosk kembali ke layar awal.</p>
         <label class="check"><input id="hideBuiltin" type="checkbox"> Sembunyikan frame bawaan (hanya desain yang diunggah yang tampil, jika ada minimal satu)</label>
         <p id="settingsMsg" class="ok"></p>
+      </section>
+
+      <section class="card" id="storCard">
+        <h2>Penyimpanan &amp; hapus otomatis</h2>
+        <p class="sub">Pantau pemakaian R2 dan atur peringatan. Foto yang melewati masa simpannya dihapus otomatis (diperiksa saat ada foto baru masuk, paling cepat tiap 10 menit).</p>
+        <div id="stBar" class="stbar"><i class="s1"></i><i class="s2"></i><i class="s3"></i></div>
+        <div id="stLeg" class="stleg">Memuat...</div>
+        <div class="split2">
+          <div>
+            <label for="stQuota">Batas penyimpanan (GB)</label>
+            <input id="stQuota" type="number" min="0.1" max="10000" step="0.1" inputmode="decimal">
+            <p class="hint">Kuota gratis R2 sekitar 10 GB. Isi sesuai paket Anda; ini hanya patokan peringatan, bukan pembatas teknis.</p>
+          </div>
+          <div>
+            <label for="stWarn">Beri peringatan saat terisi</label>
+            <select id="stWarn"><option value="60">60%</option><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option></select>
+            <p class="hint">Peringatan kuning di admin. Di 95% berubah merah.</p>
+          </div>
+        </div>
+        <label class="check"><input id="stOldest" type="checkbox"> Hapus otomatis foto terlama jika penyimpanan mencapai 95% (sampai turun ke 85%)</label>
+        <p class="hint">Peringatan: foto yang belum kedaluwarsa juga bisa terhapus, sebelum tamu atau klien sempat mengunduhnya. Aktifkan hanya jika Anda lebih memilih acara tetap berjalan daripada menyimpan semua foto.</p>
+        <div class="row">
+          <button id="stSave" type="button">Simpan pengaturan</button>
+          <button id="stClean" type="button" class="ghost">Bersihkan sekarang</button>
+        </div>
+        <p id="stMsg" class="ok"></p>
       </section>
     </div>
   </div>
@@ -1051,7 +1093,7 @@
     const total = evData.events.reduce((n, x) => n + x.count, 0) + evData.noEvent.count;
     const bytes = evData.events.reduce((n, x) => n + x.bytes, 0) + evData.noEvent.bytes;
     $('statPhotos').textContent = total;
-    $('statSize').textContent = fmtSize(bytes);
+    loadStorage();
     chipList($('evDesigns'), []);
     layChips($('evLays'), []);
     fontGrid($('evFonts'), {});
@@ -1196,6 +1238,63 @@
       msg.textContent = r.deleted + ' foto kedaluwarsa dihapus.';
       await loadEvents(); await loadGallery();
     } catch (e) { msg.className = 'err'; msg.textContent = e.message; }
+  });
+
+  /* ---------- penyimpanan ---------- */
+  const fmtBig = (b) => (b >= 1073741824 ? (b / 1073741824).toFixed(2) + ' GB' : fmtSize(b));
+  let stCfgLoaded = false;
+  async function loadStorage() {
+    let r;
+    try { r = await api('/api/admin/storage'); } catch (e) { $('stLeg').textContent = e.message; return; }
+    const cfg = r.cfg;
+    $('statSize').textContent = fmtBig(r.used) + ' · ' + r.pct + '%';
+    $('statStorBar').style.width = Math.min(100, r.pct) + '%';
+    $('statStor').className = 'stat ' + (r.level === 'ok' ? '' : r.level);
+    const tot = Math.max(r.quota, r.used) || 1;
+    const bar = $('stBar'); bar.className = 'stbar ' + (r.level === 'ok' ? '' : r.level);
+    const [a, b, c] = bar.children;
+    a.style.width = (r.groups.strips.bytes / tot * 100) + '%';
+    b.style.width = (r.groups.designs.bytes / tot * 100) + '%';
+    c.style.width = (r.groups.other.bytes / tot * 100) + '%';
+    $('stLeg').innerHTML = '';
+    [['Foto tamu', r.groups.strips], ['Desain', r.groups.designs], ['Lainnya', r.groups.other]].forEach(([n, g]) => {
+      const sp = document.createElement('span'); sp.innerHTML = '<b></b> ';
+      sp.firstChild.textContent = n + ': ' + fmtBig(g.bytes); sp.appendChild(document.createTextNode('(' + g.count + ' berkas)')); $('stLeg').appendChild(sp);
+    });
+    const tt = document.createElement('span'); tt.innerHTML = '<b></b>'; tt.firstChild.textContent = 'Terpakai ' + fmtBig(r.used) + ' dari ' + fmtBig(r.quota) + ' (' + r.pct + '%)'; $('stLeg').appendChild(tt);
+    if (!stCfgLoaded) {
+      $('stQuota').value = Math.round(cfg.quotaMB / 1024 * 100) / 100;
+      $('stWarn').value = String(cfg.warnPct);
+      $('stOldest').checked = cfg.autoOldest;
+      stCfgLoaded = true;
+    }
+    const bn = $('storBanner');
+    bn.className = r.level === 'ok' ? '' : (r.level === 'critical' ? 'critical on' : 'on');
+    if (r.level !== 'ok') {
+      bn.innerHTML = '<b></b><div class="row"><button type="button" class="sm" id="bnClean">Hapus foto kedaluwarsa sekarang</button><button type="button" class="ghost sm" id="bnSet">Buka pengaturan penyimpanan</button></div>';
+      bn.firstChild.textContent = (r.level === 'critical' ? 'Penyimpanan hampir penuh: ' : 'Penyimpanan mulai penuh: ') + r.pct + '% terpakai (' + fmtBig(r.used) + ' dari ' + fmtBig(r.quota) + '). Unduh atau hapus foto lama sebelum acara berikutnya.';
+      $('bnClean').addEventListener('click', runStorageClean);
+      $('bnSet').addEventListener('click', () => { document.querySelector('.tab[data-tab="setelan"]').click(); $('storCard').scrollIntoView({ behavior: 'smooth' }); });
+    }
+  }
+  async function runStorageClean() {
+    const m = $('stMsg'); m.className = 'ok'; m.textContent = 'Membersihkan...';
+    try {
+      const r = await api('/api/admin/storage', { method: 'POST' });
+      m.textContent = (r.deleted || 0) + ' foto kedaluwarsa dihapus' + (r.deletedOldest ? ', ' + r.deletedOldest + ' foto terlama dihapus' : '') + ' (' + fmtBig(r.freed || 0) + ' dibebaskan).';
+      await loadEvents(); if (typeof loadGallery === 'function') loadGallery();
+    } catch (e) { m.className = 'err'; m.textContent = e.message; }
+  }
+  $('stClean').addEventListener('click', () => { if (confirm('Hapus semua foto yang sudah melewati masa simpannya sekarang?')) runStorageClean(); });
+  $('stSave').addEventListener('click', async () => {
+    const m = $('stMsg'); m.className = 'ok'; m.textContent = 'Menyimpan...';
+    const gb = parseFloat(String($('stQuota').value).replace(',', '.'));
+    if (!(gb > 0)) { m.className = 'err'; m.textContent = 'Isi batas penyimpanan dalam GB (angka lebih dari 0).'; return; }
+    if ($('stOldest').checked && !confirm('Foto terlama bisa terhapus otomatis sebelum kedaluwarsa saat penyimpanan mencapai 95%. Aktifkan?')) return;
+    try {
+      await api('/api/admin/storage', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quotaMB: Math.round(gb * 1024), warnPct: Number($('stWarn').value), autoOldest: $('stOldest').checked }) });
+      stCfgLoaded = false; await loadStorage(); m.textContent = 'Tersimpan.';
+    } catch (e) { m.className = 'err'; m.textContent = e.message; }
   });
 
   /* ---------- pengaturan ---------- */

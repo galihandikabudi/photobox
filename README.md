@@ -216,6 +216,7 @@ Di kiosk, aktifkan sebuah acara lalu ketuk ikon pensil di pojok kanan atas layar
 
 - Ketuk teks (baris kecil, nama acara, judul PHOTOBOX, keterangan) lalu ketik.
 - Bilah di bawah layar: pilih font (11 pilihan, tiap nama tampil dengan fontnya), perbesar/perkecil (A− A+), tebal (B), miring (I), warna (palet + pemilih warna), Reset gaya, Batal, Simpan.
+- Baris paling atas bilah: **Warna latar** layar kiosk (palet + pemilih warna; kotak dicoret = latar biru bawaan). Pratinjaunya langsung terlihat dan tersimpan per acara.
 - Perubahan disimpan ke acara yang sedang aktif (kolom judul, baris kecil, label acara, sapaan, dan gaya). Teks yang dikosongkan atau sama dengan bawaan kembali memakai teks bawaan.
 - Font teks pada strip dipilih per acara di Admin → Acara → Teks layar awal dan strip → Font (juga bisa mengatur font teks layar depan dari sana). Berlaku untuk frame bawaan dan desain unggahan yang menyalakan "Tampilkan teks".
 
@@ -226,3 +227,24 @@ Font (Plus Jakarta Sans, Poppins, Montserrat, Playfair Display, Lobster, Pacific
 Frame batik dan acara siap pakai ada di paket **photobox-templates**: `node upload.mjs https://photobox-muhada.pages.dev smkbisa batik`.
 
 Tab Desain strip di admin menampilkan desain tersimpan sebagai galeri kotak-kotak (bisa disaring per tata letak). Ketuk kotak untuk mengubah nama, tata letak, jenis, teks, atau menghapus.
+
+
+## Penyimpanan, laporan klien, dan mode offline
+
+**Penyimpanan (Admin → Pengaturan → Penyimpanan & hapus otomatis)**
+- Menampilkan pemakaian R2 (foto tamu, desain, lainnya) dan batas yang Anda isi (GB). Kuota gratis R2 sekitar 10 GB.
+- Peringatan kuning di Admin saat pemakaian mencapai ambang yang dipilih (60-90%), merah di 95%. Tombol "Hapus foto kedaluwarsa sekarang" ada di peringatan.
+- Foto yang melewati masa simpan dihapus otomatis setiap ada foto baru masuk (paling cepat sekali per 10 menit). Opsi tambahan, mati secara bawaan: hapus foto terlama saat penuh 95% sampai turun ke 85% (foto yang belum kedaluwarsa ikut terhapus).
+- API: `GET/PUT/POST /api/admin/storage`.
+
+**Album & laporan klien (tautan album penyelenggara)**
+- Tombol "Unduh semua foto (zip)": berisi semua foto, `laporan.csv`, dan `laporan.txt`.
+- Laporan acara: total sesi, jam tersibuk, rata-rata per jam aktif, grafik sesi per jam (WIB), tata letak dan desain terpopuler. Tombol "Laporan (CSV)" dan "Cetak / simpan laporan (PDF)" (pilih "Simpan sebagai PDF" di dialog cetak).
+- Tata letak dan desain tercatat sejak versi ini; foto lama tampil sebagai "Tidak tercatat".
+
+**Mode offline kiosk**
+- Foto disimpan dulu di perangkat (IndexedDB), lalu diunggah. Bila internet putus, QR tetap muncul dengan cap "MENYUSUL" karena ID foto dibuat di kiosk; QR aktif setelah foto terunggah. Halaman unduh menunggu otomatis (cek ulang tiap 10 detik) jika tamu membukanya lebih awal.
+- Antrean diunggah otomatis tiap 20 detik dan saat internet kembali; bertahan walau halaman dimuat ulang atau perangkat dimatikan. Waktu dan acara tercatat saat foto diambil, bukan saat terunggah.
+- Pojok kiri bawah kiosk menampilkan "N foto menunggu diunggah" atau "Offline". Ketuk untuk mencoba unggah sekarang.
+- Service worker (`sw.js`) menyimpan halaman kiosk, font, dan daftar desain, jadi kiosk bisa dimuat ulang tanpa internet setelah pernah dibuka sekali saat online.
+- Foto tamu yang menunggu tersimpan di perangkat kiosk sampai terunggah; setelah itu dihapus dari perangkat.

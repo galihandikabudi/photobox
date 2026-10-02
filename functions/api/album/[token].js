@@ -13,7 +13,7 @@ export async function onRequestGet({ params, env }) {
   const items = (await listStrips(env))
     .filter((s) => s.event === ev.id && s.expires > now)
     .sort((a, b) => a.uploaded - b.uploaded)
-    .map((s) => ({ id: s.id, uploaded: s.uploaded, expires: s.expires }));
-  return json({ event: { name: ev.name, welcome: ev.welcome, retentionDays: ev.retentionDays }, items },
+    .map((s) => ({ id: s.id, uploaded: s.uploaded, expires: s.expires, layout: s.layout, design: s.design }));
+  return json({ event: { name: ev.name, welcome: ev.welcome, retentionDays: ev.retentionDays, created: ev.created }, items },
     200, { 'X-Robots-Tag': 'noindex, nofollow' });
 }

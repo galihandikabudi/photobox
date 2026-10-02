@@ -25,7 +25,7 @@ export async function onRequestGet({ request, env }) {
     if (ev.designIds.length) list = items.filter((it) => ev.designIds.includes(it.id));
     settings = { hideBuiltin: ev.hideBuiltin };
     event = {
-      id: ev.id, layouts: ev.layouts, styles: ev.styles, name: ev.name, welcome: ev.welcome, retentionDays: ev.retentionDays,
+      id: ev.id, layouts: ev.layouts, styles: ev.styles, bgColor: ev.bgColor || '', name: ev.name, welcome: ev.welcome, retentionDays: ev.retentionDays,
       title: ev.title, brandLine: ev.brandLine, badge: ev.badge,
       stripLine1: ev.stripLine1, stripTitle: ev.stripTitle, stripFooter1: ev.stripFooter1, stripFooter2: ev.stripFooter2
     };

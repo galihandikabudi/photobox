@@ -49,8 +49,9 @@ function missing() {
   return shell(
     'Foto tidak ditemukan',
     `<header><img src="/icon-192.png" alt=""><div class="badge">SMK MUHAMMADIYAH TODANAN</div></header>
-     <h1>Foto tidak ditemukan</h1>
-     <p class="note">Link ini salah atau fotonya sudah dihapus otomatis. Silakan foto lagi di photobox.</p>`,
+     <h1>Foto belum tersedia</h1>
+     <p class="note">Jika kamu baru saja berfoto, fotonya mungkin masih diunggah (internet di lokasi sedang lambat). Halaman ini memeriksa ulang otomatis setiap 10 detik. Jika tidak muncul juga, link ini salah atau fotonya sudah dihapus otomatis.</p>
+     <script>(function(){var k='n'+location.pathname,n=0;try{n=+sessionStorage.getItem(k)||0;sessionStorage.setItem(k,n+1)}catch(e){}if(n<90)setTimeout(function(){location.reload()},10000)})()</script>`,
     404
   );
 }

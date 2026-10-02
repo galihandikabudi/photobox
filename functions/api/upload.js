@@ -1,6 +1,8 @@
-import { getActiveEvent } from '../_lib/common.js';
+import { getActiveEvent, readEvent, EVENT_ID_RE, LAYOUT_IDS, STRIP_ID_RE, autoCleanup } from '../_lib/common.js';
 
-// POST /api/upload  — menerima strip foto (JPEG), menyimpan ke R2, mengembalikan {id, url}
+// POST /api/upload[?id=&event=&t=&layout=&design=]  — menerima strip foto (JPEG), menyimpan ke R2, mengembalikan {id, url}
+// Parameter opsional dipakai antrean offline kiosk: id dibuat di kiosk (idempoten, unggah ulang aman),
+// event & t = acara dan waktu saat foto diambil (bukan saat akhirnya terunggah).
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // tanpa i, l, o, 0, 1 agar tidak membingungkan
 const ID_LENGTH = 10;
 const MAX_BYTES = 6 * 1024 * 1024;
@@ -24,7 +26,7 @@ function json(obj, status = 200) {
   });
 }
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   if (!env.PHOTOS) return json({ error: 'Binding R2 "PHOTOS" belum dipasang.' }, 500);
 
   const type = (request.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase();
@@ -42,20 +44,38 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'Berkas bukan JPEG yang valid.' }, 400);
   }
 
-  const id = newId();
-  // Foto ditandai dengan acara yang sedang aktif dan masa simpan acara tersebut.
+  const q = new URL(request.url).searchParams;
+  let id = q.get('id') || '';
+  if (!STRIP_ID_RE.test(id)) id = newId();
+  const base0 = (env.PUBLIC_BASE_URL || new URL(request.url).origin).replace(/\/$/, '');
+  // Unggahan ulang dengan id yang sama (antrean offline): jangan timpa, cukup balas sukses.
+  if (q.get('id') === id && await env.PHOTOS.head(`strips/${id}.jpg`)) return json({ id, url: `${base0}/d/${id}`, existed: true }, 200);
+
+  // Foto ditandai dengan acara & waktu pengambilan; masa simpan dihitung dari waktu pengambilan.
   const meta = {};
+  const now = Date.now();
+  let taken = Number(q.get('t'));
+  if (!(Number.isFinite(taken) && taken > now - 30 * 86400000 && taken <= now + 60000)) taken = now;
   try {
-    const ev = await getActiveEvent(env);
+    let ev = null;
+    const evId = q.get('event') || '';
+    if (EVENT_ID_RE.test(evId)) ev = await readEvent(env, evId);
+    if (!ev) ev = await getActiveEvent(env);
     if (ev) {
       meta.event = ev.id;
-      meta.expires = String(Date.now() + ev.retentionDays * 86400000);
+      meta.expires = String(taken + ev.retentionDays * 86400000);
     }
   } catch (e) { /* tanpa acara aktif */ }
+  meta.taken = String(Math.round(taken));
+  const lay = q.get('layout') || '';
+  if (LAYOUT_IDS.includes(lay)) meta.layout = lay;
+  const dn = (q.get('design') || '').replace(/[^\p{L}\p{N} _().&-]/gu, '').trim().slice(0, 40);
+  if (dn) meta.design = dn;
   await env.PHOTOS.put(`strips/${id}.jpg`, data, {
     httpMetadata: { contentType: 'image/jpeg' },
     customMetadata: meta
   });
+  if (waitUntil) waitUntil(autoCleanup(env).catch(() => {}));
 
   const base = (env.PUBLIC_BASE_URL || new URL(request.url).origin).replace(/\/$/, '');
   return json({ id, url: `${base}/d/${id}` }, 201);

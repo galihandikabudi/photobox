@@ -11,7 +11,7 @@ export async function onRequestPatch({ request, params, env }) {
   let body;
   try { body = await request.json(); } catch (e) { return json({ error: 'JSON tidak valid.' }, 400); }
   const merged = { ...cur };
-  for (const k of ['name', 'welcome', 'retentionDays', 'designIds', 'hideBuiltin', 'layouts', 'styles', 'title', 'brandLine', 'badge', 'stripLine1', 'stripTitle', 'stripFooter1', 'stripFooter2']) if (k in body) merged[k] = body[k];
+  for (const k of ['name', 'welcome', 'retentionDays', 'designIds', 'hideBuiltin', 'layouts', 'styles', 'bgColor', 'title', 'brandLine', 'badge', 'stripLine1', 'stripTitle', 'stripFooter1', 'stripFooter2']) if (k in body) merged[k] = body[k];
   const next = cleanEvent(merged, cur);
   if (body.newAlbumLink === true) {
     await env.PHOTOS.delete(ALBUM_PREFIX + cur.albumToken);   // tautan lama tidak berlaku lagi

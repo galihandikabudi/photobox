@@ -287,7 +287,6 @@
   .boot-cam .boot-lens { fill: #FFD23F; stroke: none; transform-origin: 32px 35px; animation: bootFlash 1.8s ease-in-out infinite; }
   .boot-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid rgba(242,140,0,.7); animation: bootRing 2s ease-out infinite; }
   .boot-ring.r2 { animation-delay: 1s; }
-  .boot-t { font-size: clamp(20px, 3.2vw, 30px); font-weight: 700; letter-spacing: .5px; }
   .boot-dots { display: flex; gap: 12px; }
   .boot-dots i { width: 14px; height: 14px; border-radius: 50%; background: #F28C00; animation: bootDot 1.2s ease-in-out infinite; }
   .boot-dots i:nth-child(2) { animation-delay: .15s; background: #FFB13D; }
@@ -297,23 +296,35 @@
   @keyframes bootFlash { 0%,70%,100% { transform: scale(1); opacity: 1; } 80% { transform: scale(1.7); opacity: .6; } 90% { transform: scale(.8); opacity: 1; } }
   @keyframes bootDot { 0%,80%,100% { transform: translateY(0) scale(.8); opacity: .5; } 40% { transform: translateY(-14px) scale(1.1); opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .boot-ring, .boot-cam svg, .boot-lens, .boot-dots i { animation-duration: 3.5s; } }
+
+  /* Antrean offline */
+  #qChip { position: absolute; left: 24px; bottom: 20px; z-index: 6; display: none; align-items: center; gap: 10px; padding: 12px 22px; border-radius: 999px; font-size: 22px; font-weight: 700;
+    background: rgba(8,14,44,.88); border: 2px solid #f5c04a; color: #ffe08a; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+  #qChip.on { display: flex; }
+  #qChip.off { border-color: #ff8a80; color: #ffb3ac; }
+  #qChip .dot { width: 14px; height: 14px; border-radius: 50%; background: currentColor; animation: qpulse 1.4s ease-in-out infinite; }
+  @keyframes qpulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+  #qrbox.pending { position: relative; }
+  #qrbox.pending svg { opacity: .55; }
+  #qrbox.pending::after { content: "MENYUSUL"; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%) rotate(-8deg); padding: 10px 26px; border-radius: 14px;
+    background: #f5c04a; color: #1a1000; font-weight: 800; font-size: 34px; letter-spacing: 2px; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
 </style>
 
 </head>
 <body>
 
-<div id="boot" role="status" aria-live="polite">
+<div id="boot" role="status" aria-label="Memuat">
   <div class="boot-in">
     <div class="boot-cam">
       <span class="boot-ring"></span><span class="boot-ring r2"></span>
       <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="16" width="52" height="38" rx="9"/><path d="M22 16l4-7h12l4 7"/><circle cx="32" cy="35" r="11"/><circle class="boot-lens" cx="32" cy="35" r="5"/></svg>
     </div>
-    <div class="boot-t">Memuat photobox</div>
     <div class="boot-dots"><i></i><i></i><i></i></div>
   </div>
 </div>
 
 <div id="stage">
+<button id="qChip" type="button" aria-live="polite"><span class="dot"></span><span id="qChipTxt"></span></button>
 
 <section id="s-start" class="screen active">
   <div class="toolbar">
@@ -354,6 +365,10 @@
     <p class="notice" id="privacy"></p>
   </div>
   <div id="editBar">
+    <div class="ed-row">
+      <span class="ed-label">Warna latar</span>
+      <span id="edBg" class="ed-row" style="gap:10px"></span>
+    </div>
     <div class="ed-row">
       <span class="ed-label" id="edLabel">Judul</span>
       <div class="ed-fonts" id="edFonts"></div>
@@ -601,8 +616,17 @@
   const DEFAULT_LINE = $('brandLine').textContent;
   const DEFAULT_BRAND = Object.assign({}, CONFIG.brand);
   let curEv = null;
+  // Warna latar layar kiosk (per acara). Kosong = latar biru bawaan.
+  const hexRGB = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const mix = (h, t, a) => '#' + hexRGB(h).map((v) => Math.round(v + (t - v) * a).toString(16).padStart(2, '0')).join('');
+  function applyBg(c) {
+    const st = $('stage');
+    if (!/^#[0-9a-f]{6}$/i.test(c || '')) { st.style.background = ''; return; }
+    st.style.background = 'radial-gradient(900px 700px at 78% 18%, ' + mix(c, 255, .16) + '99, transparent 70%), linear-gradient(160deg, ' + mix(c, 255, .1) + ' 0%, ' + c + ' 55%, ' + mix(c, 0, .35) + ' 100%)';
+  }
   function applyEvent(ev) {
     curEv = ev;
+    applyBg(ev && ev.bgColor);
     CONFIG.brand = {
       line1: (ev && ev.stripLine1) || DEFAULT_BRAND.line1,
       title: (ev && ev.stripTitle) || DEFAULT_BRAND.title,
@@ -1305,6 +1329,25 @@
     pick.addEventListener('input', () => edChange((o) => { o.color = pick.value.toLowerCase(); }));
     cb.appendChild(pick);
 
+    const BGS = ['#0e1745', '#000000', '#3a0d1c', '#0f3d2e', '#2d1457', '#0b4f5c', '#4a2c12', '#7a1f2b', '#1a6fe8', '#f4ead5'];
+    const bb = $('edBg');
+    const bnone = document.createElement('button');
+    bnone.type = 'button'; bnone.className = 'sw none'; bnone.dataset.c = ''; bnone.setAttribute('aria-label', 'Latar bawaan');
+    bnone.addEventListener('click', () => setBg(''));
+    bb.appendChild(bnone);
+    BGS.forEach((c) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'sw'; b.dataset.c = c; b.style.background = c; b.setAttribute('aria-label', 'Latar ' + c);
+      b.addEventListener('click', () => setBg(c));
+      bb.appendChild(b);
+    });
+    const bpick = document.createElement('input');
+    bpick.type = 'color'; bpick.className = 'sw'; bpick.value = '#0e1745'; bpick.setAttribute('aria-label', 'Warna latar lain');
+    bpick.addEventListener('input', () => setBg(bpick.value.toLowerCase()));
+    bb.appendChild(bpick);
+    function setBg(c) { if (!ed) return; ed.bg = c; applyBg(c); bb.querySelectorAll('.sw').forEach((x) => { if (x.dataset.c !== undefined) x.classList.toggle('sel', x.dataset.c === c); }); }
+    window.__edBgSync = () => bb.querySelectorAll('.sw').forEach((x) => { if (x.dataset.c !== undefined) x.classList.toggle('sel', x.dataset.c === (ed ? ed.bg : '')); });
+
     $('edMinus').addEventListener('click', () => edChange((o) => { o.size = Math.max(0.5, Math.round(((o.size || 1) - 0.1) * 100) / 100); if (o.size === 1) delete o.size; }));
     $('edPlus').addEventListener('click', () => edChange((o) => { o.size = Math.min(2, Math.round(((o.size || 1) + 0.1) * 100) / 100); if (o.size === 1) delete o.size; }));
     $('edBold').addEventListener('click', () => edChange((o) => {
@@ -1337,7 +1380,7 @@
   })();
 
   function enterEdit() {
-    ed = { key: 'title', styles: JSON.parse(JSON.stringify((curEv && curEv.styles) || {})) };
+    ed = { key: 'title', bg: (curEv && curEv.bgColor) || '', styles: JSON.parse(JSON.stringify((curEv && curEv.styles) || {})) };
     $('s-start').classList.add('editing');
     togglePicker(false);
     edEls().forEach(([, el]) => { el.contentEditable = 'true'; el.spellcheck = false; });
@@ -1345,6 +1388,7 @@
     b.hidden = false;
     b.textContent = curEv.badge || curEv.name || '';
     edRefresh();
+    if (window.__edBgSync) window.__edBgSync();
   }
   function leaveEdit(restore) {
     $('s-start').classList.remove('editing');
@@ -1362,7 +1406,8 @@
       brandLine: val('brandLine', DEFAULT_LINE),
       welcome: val('sub', DEFAULT_SUB),
       badge: badgeNow === curEv.name ? '' : badgeNow,
-      styles: ed.styles
+      styles: ed.styles,
+      bgColor: ed.bg || ''
     };
     $('edSave').disabled = true;
     try {
@@ -1415,33 +1460,133 @@
   $('edPw').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitLogin(); });
 
   /* ====================== UNGGAH & QR ====================== */
-  async function uploadBlob(blob) {
-    let lastErr;
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      const ctl = new AbortController();
-      const timer = setTimeout(() => ctl.abort(), 30000);
-      try {
-        const r = await fetch(CONFIG.uploadUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'image/jpeg' },
-          body: blob,
-          signal: ctl.signal
-        });
-        clearTimeout(timer);
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const j = await r.json();
-        if (!j.url) throw new Error('Respon tidak valid');
-        return j;
-      } catch (e) {
-        clearTimeout(timer);
-        lastErr = e;
-        if (attempt < 3) await sleep(1500 * attempt);
-      }
+  /* --- Antrean unggah offline (IndexedDB). Foto disimpan di perangkat dulu, diunggah ulang otomatis sampai berhasil. --- */
+  const SID_ALPHA = 'abcdefghjkmnpqrstuvwxyz23456789';
+  function newStripId() {
+    let out = '';
+    const limit = 256 - (256 % SID_ALPHA.length);
+    while (out.length < 10) {
+      const buf = crypto.getRandomValues(new Uint8Array(20));
+      for (const b of buf) if (b < limit && out.length < 10) out += SID_ALPHA[b % SID_ALPHA.length];
     }
-    throw lastErr;
+    return out;
+  }
+  const memQ = new Map();      // cadangan bila IndexedDB tidak tersedia
+  let dbp = null;
+  function qdb() {
+    if (!dbp) {
+      dbp = new Promise((resolve) => {
+        try {
+          const rq = indexedDB.open('photobox-queue', 1);
+          rq.onupgradeneeded = () => rq.result.createObjectStore('q', { keyPath: 'id' });
+          rq.onsuccess = () => resolve(rq.result);
+          rq.onerror = () => resolve(null);
+        } catch (e) { resolve(null); }
+      });
+    }
+    return dbp;
+  }
+  async function qTx(mode, fn) {
+    const db = await qdb();
+    if (!db) return fn(null);
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction('q', mode);
+        const st = tx.objectStore('q');
+        let out;
+        fn(st, (v) => { out = v; });
+        tx.oncomplete = () => resolve(out);
+        tx.onerror = tx.onabort = () => resolve(out);
+      } catch (e) { resolve(fn(null)); }
+    });
+  }
+  async function qPut(item) {
+    memQ.set(item.id, item);
+    await qTx('readwrite', (st) => { if (st) st.put(item); });
+  }
+  async function qDel(id) {
+    memQ.delete(id);
+    await qTx('readwrite', (st) => { if (st) st.delete(id); });
+  }
+  async function qAll() {
+    const fromDb = await qTx('readonly', (st, set) => {
+      if (!st) return [];
+      const rq = st.getAll();
+      rq.onsuccess = () => set(rq.result || []);
+    });
+    const map = new Map();
+    (fromDb || []).forEach((x) => map.set(x.id, x));
+    memQ.forEach((x, k) => map.set(k, x));
+    return [...map.values()].sort((a, b) => a.t - b.t);
   }
 
+  const BASE_KEY = 'photobox-public-base';
+  const getBase = () => { try { return localStorage.getItem(BASE_KEY) || location.origin; } catch (e) { return location.origin; } };
+  const rememberBase = (url) => { try { localStorage.setItem(BASE_KEY, url.replace(/\/d\/[^/]+$/, '')); } catch (e) { /* abaikan */ } };
+
+  async function uploadOnce(item, timeoutMs) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), timeoutMs);
+    try {
+      const p = new URLSearchParams({ id: item.id, t: String(item.t), layout: item.layout || '', design: item.design || '' });
+      if (item.event) p.set('event', item.event);
+      const r = await fetch(CONFIG.uploadUrl + '?' + p, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: item.blob, signal: ctl.signal });
+      if (!r.ok) {
+        if (r.status >= 400 && r.status < 500 && r.status !== 408 && r.status !== 429) { const e = new Error('HTTP ' + r.status); e.fatal = true; throw e; }
+        throw new Error('HTTP ' + r.status);
+      }
+      const j = await r.json();
+      if (!j.url) throw new Error('Respon tidak valid');
+      rememberBase(j.url);
+      return j;
+    } finally { clearTimeout(timer); }
+  }
+
+  let currentItem = null;      // foto sesi yang sedang ditampilkan di layar hasil
+  const inFlight = new Set();
+  let flushing = false;
+  let qCount = 0;
+  function updateChip() {
+    const off = navigator.onLine === false;
+    const chip = $('qChip');
+    chip.classList.toggle('on', off || qCount > 0);
+    chip.classList.toggle('off', off);
+    $('qChipTxt').textContent = off
+      ? 'Offline' + (qCount ? ' · ' + qCount + ' foto menunggu diunggah' : ' · foto tetap tersimpan')
+      : qCount + ' foto menunggu diunggah';
+  }
+  async function refreshCount() { qCount = (await qAll()).length; updateChip(); }
+
+  async function flushQueue() {
+    if (flushing) return;
+    flushing = true;
+    try {
+      const items = await qAll();
+      qCount = items.length; updateChip();
+      for (const it of items) {
+        if (inFlight.has(it.id)) continue;
+        inFlight.add(it.id);
+        try {
+          const j = await uploadOnce(it, 30000);
+          await qDel(it.id);
+          if (currentItem && currentItem.id === it.id && $('s-result').classList.contains('active')) { currentItem.done = true; setQr(j.url); }
+        } catch (e) {
+          if (e.fatal) { await qDel(it.id); }      // ditolak server (bukan masalah jaringan): jangan diulang terus
+          else { inFlight.delete(it.id); break; }   // masih offline: coba lagi nanti
+        }
+        inFlight.delete(it.id);
+        qCount = Math.max(0, qCount - 1); updateChip();
+      }
+    } finally { flushing = false; refreshCount(); }
+  }
+  window.addEventListener('online', () => { updateChip(); flushQueue(); });
+  window.addEventListener('offline', updateChip);
+  setInterval(() => { if (qCount > 0 && navigator.onLine !== false) flushQueue(); }, 20000);
+  $('qChip').addEventListener('click', () => { flushQueue(); toast(navigator.onLine === false ? 'Masih offline. Foto akan diunggah otomatis saat internet kembali.' : 'Mengunggah foto yang menunggu...'); });
+  refreshCount().then(() => { if (qCount) flushQueue(); });
+
   function setQrLoading() {
+    $('qrbox').classList.remove('pending');
     $('qrbox').innerHTML = '<div class="spinner"></div>';
     $('qrHint').textContent = 'Menyiapkan QR...';
     $('link').textContent = '';
@@ -1449,19 +1594,24 @@
     $('resTitle').textContent = 'Fotomu jadi!';
   }
 
-  function setQr(url) {
+  function drawQr(url) {
     const qr = qrcode(0, 'M');
     qr.addData(url);
     qr.make();
     $('qrbox').innerHTML = qr.createSvgTag({ cellSize: 8, margin: 2, scalable: true });
-    $('qrHint').textContent = 'Scan QR dengan kamera HP untuk mengunduh fotomu.';
     $('link').textContent = url.replace(/^https?:\/\//, '');
   }
-
-  function setQrError() {
-    $('qrbox').innerHTML = '<span>QR belum tersedia</span>';
-    $('qrHint').textContent = 'Foto belum bisa diunggah (periksa koneksi internet). Kamu bisa menyimpan fotonya langsung, atau coba unggah lagi.';
-    $('link').textContent = '';
+  function setQr(url) {
+    $('qrbox').classList.remove('pending');
+    drawQr(url);
+    $('qrHint').textContent = 'Scan QR dengan kamera HP untuk mengunduh fotomu.';
+    $('btnRetry').hidden = true;
+  }
+  // Internet putus: QR sudah bisa ditampilkan (id dibuat di kiosk) tetapi baru aktif setelah foto terunggah.
+  function setQrPending(url) {
+    drawQr(url);
+    $('qrbox').classList.add('pending');
+    $('qrHint').textContent = 'Internet terputus. Fotomu aman dan diunggah otomatis begitu tersambung; QR baru aktif setelah itu. Foto QR ini atau simpan fotonya sekarang.';
     $('btnRetry').hidden = false;
   }
 
@@ -1469,15 +1619,26 @@
     if (sid === undefined) sid = sessionId;
     setQrLoading();
     stopIdle();
-    let url = null;
-    try {
-      const r = await uploadBlob(currentBlob);
-      url = r.url;
-    } catch (e) {
-      url = null;
+    if (!currentItem) {
+      currentItem = { id: newStripId(), blob: currentBlob, t: Date.now(), event: curEv ? curEv.id : '', layout: LAY.id, design: (selected && selected.name) || '' };
+      await qPut(currentItem);
+      refreshCount();
     }
-    if (sid !== sessionId) return;   // sesi sudah berganti (Selesai/Foto Lagi ditekan saat mengunggah)
-    if (url) setQr(url); else setQrError();
+    const item = currentItem;
+    let url = null;
+    inFlight.add(item.id);
+    try {
+      let lastErr;
+      for (let attempt = 1; attempt <= 2 && !url; attempt++) {
+        if (navigator.onLine === false) break;
+        try { url = (await uploadOnce(item, 20000)).url; } catch (e) { lastErr = e; if (e.fatal) break; if (attempt < 2) await sleep(1200); }
+      }
+      if (url) { item.done = true; await qDel(item.id); }
+    } finally { inFlight.delete(item.id); }
+    refreshCount();
+    if (url && qCount > 0) flushQueue();     // internet sudah pulih: kirim sisa antrean
+    if (sid !== sessionId) return;           // sesi sudah berganti (Selesai/Foto Lagi ditekan saat mengunggah)
+    if (url) setQr(url); else setQrPending(getBase() + '/d/' + item.id);
     startIdle();
   }
 
@@ -1523,6 +1684,7 @@
     stopIdle();
     if (stripUrl) { URL.revokeObjectURL(stripUrl); stripUrl = null; }
     currentBlob = null;
+    currentItem = null;
     photos = [];
     busy = false;
     show('start');
@@ -1624,6 +1786,7 @@
     }
     if (sid !== sessionId) return;
     if (stripUrl) URL.revokeObjectURL(stripUrl);
+    currentItem = null;
     stripUrl = URL.createObjectURL(currentBlob);
     $('stripImg').src = stripUrl;
     const ih = LAY.strip ? 1032 : 900;
@@ -1704,6 +1867,7 @@
   });
 
   // Siapkan kamera, frame, dan daftar desain lebih awal agar mulai terasa cepat
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
   initCamera();
   getFrame();
   // Tutup layar pemuatan setelah desain, font, dan data acara siap (paling lama 8 detik)

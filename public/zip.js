@@ -54,17 +54,19 @@
     return new Blob(parts.concat(central, [end.buffer]), { type: 'application/zip' });
   }
   // Mengunduh semua foto lalu menyimpannya sebagai zip. onProgress(selesai, total)
-  function downloadAll(items, zipName, onProgress) {
+  function downloadAll(items, zipName, onProgress, extra) {
     var files = [];
+    var enc = new TextEncoder();
     var done = 0;
     function next(i) {
       if (i >= items.length) {
+        (extra || []).forEach(function (e) { files.push({ name: e.name, data: enc.encode(e.text) }); });
         var url = URL.createObjectURL(makeZip(files));
         var a = document.createElement('a');
         a.href = url; a.download = zipName;
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
-        return Promise.resolve(files.length);
+        return Promise.resolve(items.length);
       }
       return fetch('/api/photo/' + items[i].id).then(function (r) {
         if (!r.ok) throw new Error('Gagal mengunduh foto ' + (i + 1));
