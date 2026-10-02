@@ -114,7 +114,7 @@ const PAGE = `<!doctype html>
 
   /* ---------- laporan ---------- */
   var TZ = 'Asia/Jakarta';
-  var LAYN = { strip4: 'Strip 4 foto', strip3: 'Strip 3 foto', strip2: 'Strip 2 foto', grid4: 'Kartu 4 foto', grid6: 'Kartu 6 foto' };
+  var LAYN = { strip4: 'Strip 4 foto', strip3: 'Strip 3 foto', strip2: 'Strip 2 foto', grid4: 'Kartu 4 foto', grid6: 'Kartu 6 foto', strip: 'Strip (jumlah foto tidak tercatat)', card: 'Kartu (jumlah foto tidak tercatat)' };
   function parts(t) {
     var f = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(t));
     var o = {}; f.forEach(function (p) { o[p.type] = p.value; });
@@ -161,11 +161,11 @@ const PAGE = `<!doctype html>
     function fill(id, obj, nameFn, top) {
       var ul = $(id); ul.innerHTML = '';
       var ks = Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; }).slice(0, top);
-      if (!ks.length) { var li = document.createElement('li'); li.textContent = 'Belum tercatat'; ul.appendChild(li); return; }
+      if (!ks.length) { var li = document.createElement('li'); li.textContent = 'Belum tercatat (hanya foto yang diambil setelah pembaruan terakhir yang tercatat)'; ul.appendChild(li); return; }
       ks.forEach(function (k) { var li = document.createElement('li'); var a = document.createElement('span'); a.textContent = nameFn(k); var b = document.createElement('b'); b.textContent = obj[k] + ' (' + Math.round(obj[k] / R.total * 100) + '%)'; li.appendChild(a); li.appendChild(b); ul.appendChild(li); });
     }
-    fill('lays', lays, function (k) { return LAYN[k] || 'Tidak tercatat'; }, 5);
-    fill('dess', dess, function (k) { return k; }, 5);
+    try { fill('lays', lays, function (k) { return LAYN[k] || 'Tidak tercatat'; }, 5); } catch (e) { $('lays').innerHTML = '<li>Belum tercatat</li>'; }
+    try { fill('dess', dess, function (k) { return k; }, 5); } catch (e) { $('dess').innerHTML = '<li>Belum tercatat</li>'; }
     $('repNote').textContent = 'Dibuat ' + new Date().toLocaleString('id-ID', { timeZone: TZ, dateStyle: 'long', timeStyle: 'short' }) + ' WIB. Satu sesi = satu hasil foto yang terunggah. Jam ditampilkan dalam WIB.' + (evInfo && evInfo.retentionDays ? ' Foto dihapus otomatis ' + evInfo.retentionDays + ' hari setelah diambil; laporan hanya menghitung foto yang masih tersimpan.' : '');
     $('rep').hidden = false;
   }

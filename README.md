@@ -248,3 +248,10 @@ Tab Desain strip di admin menampilkan desain tersimpan sebagai galeri kotak-kota
 - Pojok kiri bawah kiosk menampilkan "N foto menunggu diunggah" atau "Offline". Ketuk untuk mencoba unggah sekarang.
 - Service worker (`sw.js`) menyimpan halaman kiosk, font, dan daftar desain, jadi kiosk bisa dimuat ulang tanpa internet setelah pernah dibuka sekali saat online.
 - Foto tamu yang menunggu tersimpan di perangkat kiosk sampai terunggah; setelah itu dihapus dari perangkat.
+
+
+## Layar penuh di iPad (dan layar lain)
+
+- Tampilan kini menyesuaikan rasio layar: iPad (4:3), TV (16:9), dan layar lebih lebar semuanya terisi penuh tanpa pita kosong. Lebar dasar 1920 (atau tinggi dasar 1080 pada layar yang lebih lebar dari 16:9), sisanya mengikuti rasio.
+- Pasang di iPad lewat Safari: Bagikan → Tambah ke Layar Utama, lalu buka dari ikon agar tanpa bilah Safari. Bilah status iPadOS (jam, baterai) selalu tampil dan tidak bisa disembunyikan oleh situs web.
+- Aktifkan Guided Access untuk mengunci iPad ke aplikasi ini. Aplikasi meminta layar tetap menyala (Screen Wake Lock), tetapi tetap atur Kunci Otomatis: Tidak Pernah.

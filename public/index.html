@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#101A47">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Photobox">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="robots" content="noindex, nofollow">
 <title>Photobox SMK Muhada</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -33,7 +37,7 @@
   }
 
   #stage {
-    position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; margin: -540px 0 0 -960px;
+    position: absolute; left: 50%; top: 50%; width: var(--sw, 1920px); height: var(--sh, 1080px); margin: calc(var(--sh, 1080px) / -2) 0 0 calc(var(--sw, 1920px) / -2);
     transform: scale(var(--s, 1)); transform-origin: center center; overflow: hidden;
     background:
       radial-gradient(900px 700px at 78% 18%, rgba(26,111,232,.55), transparent 70%),
@@ -537,10 +541,20 @@
   class Cancelled extends Error {}
 
   /* ====================== RASIO TETAP ====================== */
+  // Kanvas menyesuaikan rasio layar (iPad 4:3, TV 16:9, dll.) agar memenuhi layar tanpa pita kosong:
+  // lebar dasar 1920 (atau tinggi dasar 1080 pada layar lebih lebar dari 16:9), sisanya mengikuti rasio.
   function fitStage() {
-    const s = Math.min(window.innerWidth / STAGE.w, window.innerHeight / STAGE.h);
-    $('stage').style.setProperty('--s', s);
+    const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const aspect = Math.max(1, vw / vh);
+    let w = STAGE.w, h = STAGE.h;
+    if (aspect >= STAGE.w / STAGE.h) w = Math.round(STAGE.h * aspect); else h = Math.round(STAGE.w / aspect);
+    const st = $('stage');
+    st.style.setProperty('--sw', w + 'px');
+    st.style.setProperty('--sh', h + 'px');
+    st.style.setProperty('--s', Math.min(vw / w, vh / h));
   }
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', fitStage);
   window.addEventListener('resize', fitStage);
   window.addEventListener('orientationchange', fitStage);
   fitStage();

@@ -330,6 +330,7 @@
         <section class="card">
           <h2>Desain tersimpan</h2>
           <p class="sub">Perubahan tersimpan otomatis.</p>
+          <div id="designEvFilter" class="chips" style="margin-bottom:10px" hidden></div>
           <div id="designFilter" class="chips" style="margin-bottom:12px" hidden></div>
           <div id="seltools" class="seltools" hidden>
             <button id="btnSel" type="button" class="ghost">Pilih beberapa</button>
@@ -468,7 +469,15 @@
   let selMode = false;
   const pickedD = new Set();
   let allItems = [];
-  const visibleItems = () => allItems.filter((it) => designFilterVal === 'all' || (it.layout || 'strip4') === designFilterVal);
+  let designEvVal = 'all';   // 'all' | 'none' | id acara
+  const evHas = (ev, id) => !ev.designIds.length || ev.designIds.includes(id);   // acara tanpa pilihan = semua desain tersedia
+  const inEvFilter = (it) => {
+    if (designEvVal === 'all') return true;
+    if (designEvVal === 'none') return !evData.events.some((e) => e.designIds.includes(it.id));
+    const ev = evData.events.find((e) => e.id === designEvVal);
+    return !ev || evHas(ev, it.id);
+  };
+  const visibleItems = () => allItems.filter((it) => inEvFilter(it) && (designFilterVal === 'all' || (it.layout || 'strip4') === designFilterVal));
   function updSel() {
     const n = pickedD.size;
     $('btnSel').textContent = selMode ? 'Selesai memilih' : 'Pilih beberapa';
@@ -571,12 +580,28 @@
     $('seltools').hidden = !items.length;
     const list = $('list');
     list.innerHTML = '';
+    // filter per acara
+    const ebox = $('designEvFilter');
+    ebox.innerHTML = '';
+    const evs = (evData && evData.events) || [];
+    ebox.hidden = !evs.length;
+    if (designEvVal !== 'all' && designEvVal !== 'none' && !evs.some((e) => e.id === designEvVal)) designEvVal = 'all';
+    const lab = document.createElement('span'); lab.className = 'hint'; lab.style.margin = '0 4px 0 0'; lab.textContent = 'Acara:'; ebox.appendChild(lab);
+    const evOpts = [['all', 'Semua acara (' + items.length + ')']]
+      .concat(evs.map((e) => [e.id, e.name + ' (' + items.filter((it) => evHas(e, it.id)).length + ')']))
+      .concat([['none', 'Tanpa acara (' + items.filter((it) => !evs.some((e) => e.designIds.includes(it.id))).length + ')']]);
+    evOpts.forEach(([id, label]) => {
+      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip' + (designEvVal === id ? ' on' : ''); c.textContent = label;
+      c.addEventListener('click', () => { designEvVal = id; renderGallery(items); });
+      ebox.appendChild(c);
+    });
+    const evItems = items.filter(inEvFilter);
     const fbox = $('designFilter');
-    const present = LAYOUTS.filter((l) => items.some((it) => (it.layout || 'strip4') === l[0]));
+    const present = LAYOUTS.filter((l) => evItems.some((it) => (it.layout || 'strip4') === l[0]));
     fbox.hidden = present.length < 2;
     fbox.innerHTML = '';
     if (designFilterVal !== 'all' && !present.some((l) => l[0] === designFilterVal)) designFilterVal = 'all';
-    [['all', 'Semua (' + items.length + ')']].concat(present.map((l) => [l[0], layName(l[0]) + ' (' + items.filter((it) => (it.layout || 'strip4') === l[0]).length + ')'])).forEach(([id, label]) => {
+    [['all', 'Semua (' + evItems.length + ')']].concat(present.map((l) => [l[0], layName(l[0]) + ' (' + evItems.filter((it) => (it.layout || 'strip4') === l[0]).length + ')'])).forEach(([id, label]) => {
       const c = document.createElement('button');
       c.type = 'button';
       c.className = 'chip' + (designFilterVal === id ? ' on' : '');
@@ -584,7 +609,9 @@
       c.addEventListener('click', () => { designFilterVal = id; renderGallery(items); });
       fbox.appendChild(c);
     });
-    visibleItems().forEach((it) => list.appendChild(tile(it)));
+    const vis = visibleItems();
+    if (!vis.length) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = 'Tidak ada desain untuk filter ini.'; list.appendChild(p); }
+    vis.forEach((it) => list.appendChild(tile(it)));
     updSel();
   }
 
@@ -1094,6 +1121,7 @@
     const bytes = evData.events.reduce((n, x) => n + x.bytes, 0) + evData.noEvent.bytes;
     $('statPhotos').textContent = total;
     loadStorage();
+    if (allItems.length) renderGallery(allItems);
     chipList($('evDesigns'), []);
     layChips($('evLays'), []);
     fontGrid($('evFonts'), {});
