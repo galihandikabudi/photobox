@@ -59,6 +59,8 @@ export function sniffImage(u8) {
 }
 
 export const LAYOUT_IDS = ['strip4', 'strip3', 'strip2', 'grid4', 'grid6'];
+// filter kamera (id harus sama dengan di kiosk dan admin)
+export const FILTER_IDS = ['none', 'bw', 'vintage', 'warm', 'cool', 'vivid', 'soft', 'drama'];
 export const cleanLayout = (v) => (LAYOUT_IDS.includes(v) ? v : 'strip4');
 
 export function toItem(o) {
@@ -148,6 +150,11 @@ export function cleanEvent(raw, defaults) {
     layouts: Array.isArray(raw.layouts ?? defaults.layouts)
       ? LAYOUT_IDS.filter((x) => (raw.layouts ?? defaults.layouts).includes(x))
       : [],
+    // filter kamera yang ditawarkan di kiosk (kosong = semua) dan filter awal ('' = Asli)
+    filters: Array.isArray(raw.filters ?? defaults.filters)
+      ? FILTER_IDS.filter((x) => (raw.filters ?? defaults.filters).includes(x))
+      : [],
+    defaultFilter: (() => { const f = raw.defaultFilter ?? defaults.defaultFilter; return FILTER_IDS.includes(f) && f !== 'none' ? f : ''; })(),
     // teks layar awal & strip (kosong = teks bawaan)
     title: txt(raw.title ?? defaults.title, 24),
     brandLine: txt(raw.brandLine ?? defaults.brandLine, 40),

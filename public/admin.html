@@ -294,6 +294,10 @@
           <label>Tata letak yang ditawarkan di kiosk <span class="hint">(kosong = Strip 4 foto, ditambah tata letak dari desain unggahan)</span></label>
           <div id="evLays" class="chips"></div>
           <p class="hint">Jika tidak ada yang dicentang, semua desain tersedia.</p>
+          <label>Filter kamera yang ditawarkan <span class="hint">(kosong = semua filter)</span></label>
+          <div id="evFils" class="chips"></div>
+          <label>Filter awal</label>
+          <select id="evFilDef"></select>
           <label class="check"><input id="evHide" type="checkbox"> Sembunyikan frame bawaan</label>
           <div class="row"><button id="evCreate" type="button">Buat acara</button></div>
           <p id="evCreateMsg" class="err"></p>
@@ -1033,6 +1037,24 @@
     });
   }
 
+  const FILTERS = [['none','Asli'],['bw','Hitam Putih'],['vintage','Vintage'],['warm','Hangat'],['cool','Sejuk'],['vivid','Cerah'],['soft','Halus'],['drama','Drama']];
+  function filChips(container, selected) {
+    container.innerHTML = '';
+    FILTERS.forEach((f) => {
+      const lb = document.createElement('label');
+      lb.className = 'chip';
+      const c = document.createElement('input');
+      c.type = 'checkbox'; c.value = f[0]; c.checked = selected.includes(f[0]);
+      lb.append(c, document.createTextNode(f[1]));
+      container.appendChild(lb);
+    });
+  }
+  function filDefault(sel, cur) {
+    sel.innerHTML = '';
+    FILTERS.forEach((f) => { const o = document.createElement('option'); o.value = f[0] === 'none' ? '' : f[0]; o.textContent = f[1]; sel.appendChild(o); });
+    sel.value = cur || '';
+  }
+
   function chipList(container, selected) {
     container.innerHTML = '';
     if (!designList.length) { container.innerHTML = '<span class="hint">Belum ada desain unggahan (frame bawaan dipakai).</span>'; return; }
@@ -1124,6 +1146,8 @@
     if (allItems.length) renderGallery(allItems);
     chipList($('evDesigns'), []);
     layChips($('evLays'), []);
+    filChips($('evFils'), []);
+    filDefault($('evFilDef'), '');
     fontGrid($('evFonts'), {});
     renderEvents();
     fillGalEvents();
@@ -1151,11 +1175,16 @@
         try { await navigator.clipboard.writeText(link); e.target.textContent = 'Tersalin'; } catch (err) { prompt('Salin tautan album:', link); }
       });
       mk('Buka album', 'ghost sm', () => window.open(link, '_blank', 'noopener'));
+      const wallLink = location.origin + '/w/' + ev.albumToken;
+      mk('Buka layar tayang', 'ghost sm', () => window.open(wallLink, '_blank', 'noopener'));
+      mk('Salin tautan layar tayang', 'ghost sm', async (e) => {
+        try { await navigator.clipboard.writeText(wallLink); e.target.textContent = 'Tersalin'; } catch (err) { prompt('Salin tautan layar tayang:', wallLink); }
+      });
       mk('Edit', 'ghost sm', () => el.classList.toggle('open'));
 
       const edit = document.createElement('div');
       edit.className = 'edit';
-      edit.innerHTML = '<label>Nama acara</label><input type="text" maxlength="60" class="e-name"><label>Teks sambutan</label><input type="text" maxlength="140" class="e-wel"><label>Masa simpan (hari)</label><input type="text" inputmode="numeric" class="e-days"><details class="more"><summary>Teks layar awal dan strip</summary><label>Judul besar</label><input type="text" maxlength="24" class="e-title"><label>Baris di atas judul</label><input type="text" maxlength="40" class="e-brand"><label>Label acara</label><input type="text" maxlength="40" class="e-badge"><label>Teks atas pada strip</label><input type="text" maxlength="40" class="e-s1"><label>Judul pada strip</label><input type="text" maxlength="20" class="e-s2"><label>Teks bawah 1 pada strip</label><input type="text" maxlength="30" class="e-s3"><label>Teks bawah 2 pada strip</label><input type="text" maxlength="30" class="e-s4"></details><label>Desain yang tersedia</label><div class="chips e-des"></div><label>Tata letak yang ditawarkan</label><div class="chips e-lays"></div><label>Font teks layar depan dan strip</label><div class="fontgrid e-fonts"></div><label class="check"><input type="checkbox" class="e-hide"> Sembunyikan frame bawaan</label><div class="row e-row"></div><p class="ok e-msg"></p>';
+      edit.innerHTML = '<label>Nama acara</label><input type="text" maxlength="60" class="e-name"><label>Teks sambutan</label><input type="text" maxlength="140" class="e-wel"><label>Masa simpan (hari)</label><input type="text" inputmode="numeric" class="e-days"><details class="more"><summary>Teks layar awal dan strip</summary><label>Judul besar</label><input type="text" maxlength="24" class="e-title"><label>Baris di atas judul</label><input type="text" maxlength="40" class="e-brand"><label>Label acara</label><input type="text" maxlength="40" class="e-badge"><label>Teks atas pada strip</label><input type="text" maxlength="40" class="e-s1"><label>Judul pada strip</label><input type="text" maxlength="20" class="e-s2"><label>Teks bawah 1 pada strip</label><input type="text" maxlength="30" class="e-s3"><label>Teks bawah 2 pada strip</label><input type="text" maxlength="30" class="e-s4"></details><label>Desain yang tersedia</label><div class="chips e-des"></div><label>Tata letak yang ditawarkan</label><div class="chips e-lays"></div><label>Filter kamera yang ditawarkan</label><div class="chips e-fils"></div><label>Filter awal</label><select class="e-fildef"></select><label>Font teks layar depan dan strip</label><div class="fontgrid e-fonts"></div><label class="check"><input type="checkbox" class="e-hide"> Sembunyikan frame bawaan</label><div class="row e-row"></div><p class="ok e-msg"></p>';
       edit.querySelector('.e-name').value = ev.name;
       edit.querySelector('.e-wel').value = ev.welcome;
       edit.querySelector('.e-days').value = ev.retentionDays;
@@ -1164,6 +1193,8 @@
         .forEach((p) => { edit.querySelector(p[0]).value = ev[p[1]] || ''; });
       chipList(edit.querySelector('.e-des'), ev.designIds);
       layChips(edit.querySelector('.e-lays'), ev.layouts || []);
+      filChips(edit.querySelector('.e-fils'), ev.filters || []);
+      filDefault(edit.querySelector('.e-fildef'), ev.defaultFilter);
       fontGrid(edit.querySelector('.e-fonts'), ev.styles || {});
       const er = edit.querySelector('.e-row');
       const msg = edit.querySelector('.e-msg');
@@ -1174,7 +1205,7 @@
         try {
           await api('/api/admin/events/' + ev.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
             name: edit.querySelector('.e-name').value, welcome: edit.querySelector('.e-wel').value,
-            retentionDays: edit.querySelector('.e-days').value, designIds: picked(edit.querySelector('.e-des')), layouts: picked(edit.querySelector('.e-lays')), styles: fontStyles(edit.querySelector('.e-fonts'), ev.styles),
+            retentionDays: edit.querySelector('.e-days').value, designIds: picked(edit.querySelector('.e-des')), layouts: picked(edit.querySelector('.e-lays')), filters: picked(edit.querySelector('.e-fils')), defaultFilter: edit.querySelector('.e-fildef').value, styles: fontStyles(edit.querySelector('.e-fonts'), ev.styles),
             hideBuiltin: edit.querySelector('.e-hide').checked,
             title: edit.querySelector('.e-title').value, brandLine: edit.querySelector('.e-brand').value, badge: edit.querySelector('.e-badge').value,
             stripLine1: edit.querySelector('.e-s1').value, stripTitle: edit.querySelector('.e-s2').value,
@@ -1216,7 +1247,7 @@
     try {
       await api('/api/admin/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
         name: $('evName').value, welcome: $('evWelcome').value, retentionDays: $('evDays').value,
-        designIds: picked($('evDesigns')), layouts: picked($('evLays')), hideBuiltin: $('evHide').checked, styles: fontStyles($('evFonts'), {}),
+        designIds: picked($('evDesigns')), layouts: picked($('evLays')), filters: picked($('evFils')), defaultFilter: $('evFilDef').value, hideBuiltin: $('evHide').checked, styles: fontStyles($('evFonts'), {}),
         title: $('evTitle').value, brandLine: $('evBrand').value, badge: $('evBadge').value,
         stripLine1: $('evS1').value, stripTitle: $('evS2').value, stripFooter1: $('evS3').value, stripFooter2: $('evS4').value }) });
       ['evName', 'evWelcome', 'evTitle', 'evBrand', 'evBadge', 'evS1', 'evS2', 'evS3', 'evS4'].forEach((i) => { $(i).value = ''; });

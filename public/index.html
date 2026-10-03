@@ -116,6 +116,14 @@
   .lay svg { width: 26px; height: 36px; fill: rgba(255,255,255,.55); stroke: none; }
   .lay.sel { background: rgba(242,140,0,.2); border-color: var(--accent); color: #fff; }
   .lay.sel svg { fill: var(--accent); }
+  .filbar { gap: 10px; }
+  .fil { display: flex; align-items: center; gap: 10px; padding: 7px 20px 7px 8px; border-radius: 999px; font-size: 20px; font-weight: 700;
+    background: var(--glass); border: 2px solid var(--line); color: var(--cream); box-shadow: none; }
+  .fil .fsw { width: 42px; height: 42px; border-radius: 50%; flex: none; border: 2px solid rgba(255,255,255,.5);
+    background: radial-gradient(circle at 50% 38%, #f2c9a6 0 24%, transparent 25%), linear-gradient(180deg, #62b6ff 0%, #8fd4ff 40%, #ff9a5a 60%, #3f7a3a 100%); }
+  .fil.sel { background: rgba(242,140,0,.2); border-color: var(--accent); color: #fff; }
+  .fil.sel .fsw { border-color: var(--accent); }
+  .editing .filbar { pointer-events: none; opacity: .35; }
   .hero-col { flex: none; display: flex; flex-direction: column; align-items: center; gap: 44px; }
   .dnav { display: flex; align-items: center; gap: 18px; }
   .dnav[hidden] { display: none; }
@@ -158,17 +166,17 @@
   input.sw { -webkit-appearance: none; appearance: none; background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); cursor: pointer; }
   input.sw::-webkit-color-swatch-wrapper { padding: 0; opacity: 0; }
   .ed-sp { flex: 1; }
-  #editLogin { position: absolute; inset: 0; z-index: 8; display: none; align-items: center; justify-content: center; background: rgba(8,14,44,.85); }
+  #editLogin { position: absolute; inset: 0; z-index: 8; display: none; align-items: center; justify-content: center; background: rgba(var(--ov, 8,14,44),.85); }
   #editLogin.on { display: flex; }
   #editLogin input { width: 520px; font-size: 34px; padding: 16px 24px; border-radius: 16px; border: 2px solid var(--line); background: rgba(255,255,255,.08); color: #fff; text-align: center; }
-  #toast { position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); z-index: 9; background: rgba(8,14,44,.95); border: 2px solid var(--accent);
+  #toast { position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); z-index: 9; background: rgba(var(--ov, 8,14,44),.95); border: 2px solid var(--accent);
     padding: 16px 34px; border-radius: 999px; font-size: 26px; font-weight: 700; opacity: 0; pointer-events: none; transition: opacity .3s; }
   #toast.on { opacity: 1; }
 
   /* panel pilih desain */
   #pickerWrap {
     position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column;
-    background: radial-gradient(120% 100% at 50% 0%, #1a3a96 0%, #0e1745 70%);
+    background: radial-gradient(120% 100% at 50% 0%, var(--pk1, #1a3a96) 0%, var(--pk2, #0e1745) 70%);
   }
   #pickerWrap[hidden] { display: none; }
   .pick-head { text-align: left; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 28px 28px 8px 64px; }
@@ -251,7 +259,7 @@
   #ringBox { position: absolute; left: 50%; top: 50%; width: 440px; height: 440px; margin: -220px 0 0 -220px; z-index: 3; pointer-events: none; opacity: 0; }
   #ringBox.on { opacity: 1; }
   #ringBox svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
-  #ringBox circle { fill: rgba(8,14,44,.38); stroke-width: 14; }
+  #ringBox circle { fill: rgba(var(--ov, 8,14,44),.38); stroke-width: 14; }
   #ringBox .trk { stroke: rgba(255,255,255,.22); }
   #ringBox .prg { stroke: var(--accent-2); fill: none; stroke-linecap: round; stroke-dasharray: 1131; stroke-dashoffset: 0; filter: drop-shadow(0 0 14px rgba(242,140,0,.9)); }
   #ringBox.run .prg { animation: drain 1s linear forwards; }
@@ -274,10 +282,10 @@
 
   #confirm {
     position: absolute; inset: 0; z-index: 5; display: none; align-items: center; justify-content: center;
-    background: rgba(8,14,44,.82);
+    background: rgba(var(--ov, 8,14,44),.82);
   }
   #confirm.on { display: flex; }
-  .dialog { background: #16266a; border: 2px solid var(--line); border-radius: 30px; padding: 54px 70px; display: flex; flex-direction: column; align-items: center; gap: 22px; box-shadow: 0 40px 90px rgba(0,0,0,.6); }
+  .dialog { background: var(--dlg, #16266a); border: 2px solid var(--line); border-radius: 30px; padding: 54px 70px; display: flex; flex-direction: column; align-items: center; gap: 22px; box-shadow: 0 40px 90px rgba(0,0,0,.6); }
   .dialog h2 { font-size: 54px; color: #fff; }
   .dialog p { font-size: 28px; max-width: 720px; opacity: .85; }
 
@@ -401,6 +409,7 @@
     <h1 id="heroTitle" data-ed="title" data-ph="Judul">PHOTOBOX</h1>
     <p class="sub" id="heroSub" data-ed="sub" data-ph="Keterangan acara">Abadikan momenmu. Foto-foto seru langsung jadi satu hasil berframe, siap dibawa pulang.</p>
     <div id="layBar" class="laybar" hidden></div>
+    <div id="filBar" class="laybar filbar" hidden></div>
     <div class="steps">
       <div class="step"><b>1</b><span id="stepShots">Ambil 4 foto</span></div>
       <div class="step"><b>2</b>Scan QR</div>
@@ -701,7 +710,15 @@
   function applyBg(c) {
     const st = $('stage');
     // warna di balik status bar iPad & tepi layar mengikuti warna latar acara
-    const edge = /^#[0-9a-f]{6}$/i.test(c || '') ? mix(c, 255, .1) : '';
+    const okc = /^#[0-9a-f]{6}$/i.test(c || '');
+    ['--pk1', '--pk2', '--dlg', '--ov'].forEach((v) => { if (!okc) st.style.removeProperty(v); });
+    if (okc) {   // panel pilih desain, dialog, dan lapisan gelap ikut warna latar acara
+      st.style.setProperty('--pk1', mix(c, 255, .16));
+      st.style.setProperty('--pk2', mix(c, 0, .5));
+      st.style.setProperty('--dlg', mix(c, 0, .22));
+      st.style.setProperty('--ov', hexRGB(mix(c, 0, .65)).join(','));
+    }
+    const edge = okc ? mix(c, 255, .1) : '';
     document.documentElement.style.background = edge;
     document.body.style.background = edge;
     const tc = document.querySelector('meta[name="theme-color"]');
@@ -793,6 +810,89 @@
     if (document.visibilityState === 'visible') requestWakeLock();
   });
 
+  /* ====================== FILTER KAMERA ====================== */
+  // Tiap filter = daftar operasi bergaya CSS filter. Dipakai dua kali: sebagai CSS pada video langsung dan
+  // sebagai matriks warna pada kanvas (jadi hasil foto persis sama dengan yang terlihat, tanpa bergantung ctx.filter).
+  const FILTERS = [
+    { id: 'none', name: 'Asli', ops: [] },
+    { id: 'bw', name: 'Hitam Putih', ops: [['grayscale', 1], ['contrast', 1.1]] },
+    { id: 'vintage', name: 'Vintage', ops: [['sepia', .55], ['contrast', 1.05], ['saturate', 1.2], ['brightness', 1.03]] },
+    { id: 'warm', name: 'Hangat', ops: [['sepia', .2], ['saturate', 1.25], ['brightness', 1.04], ['hue-rotate', -8]] },
+    { id: 'cool', name: 'Sejuk', ops: [['saturate', 1.1], ['hue-rotate', 12], ['brightness', 1.02]] },
+    { id: 'vivid', name: 'Cerah', ops: [['saturate', 1.45], ['contrast', 1.1]] },
+    { id: 'soft', name: 'Halus', ops: [['contrast', .92], ['brightness', 1.1], ['saturate', 1.05]] },
+    { id: 'drama', name: 'Drama', ops: [['contrast', 1.35], ['saturate', .85], ['brightness', .95]] }
+  ];
+  const FILTER_BY = Object.fromEntries(FILTERS.map((f) => [f.id, f]));
+  let curFilterId = 'none';
+  let allowedFilters = FILTERS.slice();
+  let evFilterKey = null;
+  const filterCss = (f) => f.ops.map((o) => o[0] + '(' + o[1] + (o[0] === 'hue-rotate' ? 'deg' : '') + ')').join(' ') || 'none';
+
+  // Tiap operasi dihitung sendiri dan dijepit ke 0..255 seperti CSS filter, supaya hasilnya sama dengan video langsung.
+  function filterStages(f) {
+    const st = [];
+    for (const [n, v] of f.ops) {
+      let L = null, t = [0, 0, 0];
+      if (n === 'grayscale') { const a = 1 - v; L = [[.2126 + .7874 * a, .7152 - .7152 * a, .0722 - .0722 * a], [.2126 - .2126 * a, .7152 + .2848 * a, .0722 - .0722 * a], [.2126 - .2126 * a, .7152 - .7152 * a, .0722 + .9278 * a]]; }
+      else if (n === 'sepia') { const a = 1 - v; L = [[.393 + .607 * a, .769 - .769 * a, .189 - .189 * a], [.349 - .349 * a, .686 + .314 * a, .168 - .168 * a], [.272 - .272 * a, .534 - .534 * a, .131 + .869 * a]]; }
+      else if (n === 'saturate') { L = [[.213 + .787 * v, .715 - .715 * v, .072 - .072 * v], [.213 - .213 * v, .715 + .285 * v, .072 - .072 * v], [.213 - .213 * v, .715 - .715 * v, .072 + .928 * v]]; }
+      else if (n === 'hue-rotate') {
+        const r = v * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
+        L = [[.213 + c * .787 - s * .213, .715 - c * .715 - s * .715, .072 - c * .072 + s * .928], [.213 - c * .213 + s * .143, .715 + c * .285 + s * .140, .072 - c * .072 - s * .283], [.213 - c * .213 - s * .787, .715 - c * .715 + s * .715, .072 + c * .928 + s * .072]];
+      }
+      else if (n === 'brightness') { L = [[v, 0, 0], [0, v, 0], [0, 0, v]]; }
+      else if (n === 'contrast') { L = [[v, 0, 0], [0, v, 0], [0, 0, v]]; t = [127.5 * (1 - v), 127.5 * (1 - v), 127.5 * (1 - v)]; }
+      if (L) st.push({ L, t });
+    }
+    return st;
+  }
+  let fmCache = { id: '', st: null };
+  function applyFilterPx(ctx, w, h) {
+    const f = FILTER_BY[curFilterId];
+    if (!f || !f.ops.length) return;
+    if (fmCache.id !== f.id) fmCache = { id: f.id, st: filterStages(f) };
+    const st = fmCache.st, n = st.length;
+    const img = ctx.getImageData(0, 0, w, h), d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      let r = d[i], g = d[i + 1], b = d[i + 2];
+      for (let k = 0; k < n; k++) {
+        const L = st[k].L, t = st[k].t;
+        const nr = L[0][0] * r + L[0][1] * g + L[0][2] * b + t[0];
+        const ng = L[1][0] * r + L[1][1] * g + L[1][2] * b + t[1];
+        const nb = L[2][0] * r + L[2][1] * g + L[2][2] * b + t[2];
+        r = nr < 0 ? 0 : nr > 255 ? 255 : nr; g = ng < 0 ? 0 : ng > 255 ? 255 : ng; b = nb < 0 ? 0 : nb > 255 ? 255 : nb;
+      }
+      d[i] = r; d[i + 1] = g; d[i + 2] = b;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  function setVideoFilter() { $('video').style.filter = filterCss(FILTER_BY[curFilterId] || FILTERS[0]); }
+
+  function renderFilBar() {
+    const bar = $('filBar');
+    bar.hidden = allowedFilters.length < 2;
+    bar.innerHTML = '';
+    allowedFilters.forEach((f) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'fil' + (f.id === curFilterId ? ' sel' : '');
+      b.innerHTML = '<span class="fsw" style="filter:' + filterCss(f) + '"></span><span>' + f.name + '</span>';
+      b.addEventListener('click', () => { curFilterId = f.id; setVideoFilter(); renderFilBar(); });
+      bar.appendChild(b);
+    });
+  }
+  function setEventFilters(ev) {
+    const ids = ev && Array.isArray(ev.filters) ? ev.filters : [];
+    allowedFilters = ids.length ? FILTERS.filter((f) => ids.includes(f.id)) : FILTERS.slice();
+    if (!allowedFilters.length) allowedFilters = FILTERS.slice();
+    const key = ev ? ev.id : '';
+    if (key !== evFilterKey) { evFilterKey = key; curFilterId = (ev && ev.defaultFilter && FILTER_BY[ev.defaultFilter]) ? ev.defaultFilter : 'none'; }
+    if (!allowedFilters.some((f) => f.id === curFilterId)) curFilterId = allowedFilters[0].id;
+    setVideoFilter();
+    renderFilBar();
+  }
+
   /* ====================== PENGAMBILAN FOTO ====================== */
   // Apa pun rasio kameranya (4:3, 16:9, 9:16), bagian tengah dipotong ke rasio jendela foto (540:355),
   // sama persis dengan yang terlihat di preview (object-fit: cover).
@@ -813,6 +913,7 @@
     if (CONFIG.mirror) { ctx.translate(sw, 0); ctx.scale(-1, 1); }
     ctx.drawImage(video, cx, cy, cw, ch, 0, 0, sw, sh);
     ctx.restore();
+    applyFilterPx(ctx, sw, sh);
     return true;
   }
 
@@ -1387,11 +1488,13 @@
       const j = await r.json();
       const raw = Array.isArray(j.items) ? j.items : [];
       applyEvent(j.event || null);
+      setEventFilters(j.event || null);
       lays = (j.event && Array.isArray(j.event.layouts)) ? j.event.layouts.filter((x) => LAYOUTS[x]) : [];
       items = raw.map((it) => ({ id: it.id, name: it.name, type: it.type, showText: !!it.showText, url: it.url, layout: LAYOUTS[it.layout] ? it.layout : 'strip4' }));
       hide = !!(j.settings && j.settings.hideBuiltin);
     } catch (e) {
       items = [];
+      if (evFilterKey === null) setEventFilters(null);
     }
     if (my !== loadSeq) return;
     allItems = items;

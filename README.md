@@ -255,3 +255,24 @@ Tab Desain strip di admin menampilkan desain tersimpan sebagai galeri kotak-kota
 - Tampilan kini menyesuaikan rasio layar: iPad (4:3), TV (16:9), dan layar lebih lebar semuanya terisi penuh tanpa pita kosong. Lebar dasar 1920 (atau tinggi dasar 1080 pada layar yang lebih lebar dari 16:9), sisanya mengikuti rasio.
 - Pasang di iPad lewat Safari: Bagikan → Tambah ke Layar Utama, lalu buka dari ikon agar tanpa bilah Safari. Bilah status iPadOS (jam, baterai) selalu tampil dan tidak bisa disembunyikan oleh situs web.
 - Aktifkan Guided Access untuk mengunci iPad ke aplikasi ini. Aplikasi meminta layar tetap menyala (Screen Wake Lock), tetapi tetap atur Kunci Otomatis: Tidak Pernah.
+
+## Filter kamera
+
+Tamu bisa memilih filter di layar awal kiosk (deretan tombol bulat dengan contoh warna di bawah pilihan tata letak). Ada 8 filter: **Asli, Hitam Putih, Vintage, Hangat, Sejuk, Cerah, Halus, Drama**. Filter terlihat langsung pada kamera dan pada strip pratinjau, lalu ikut tersimpan di foto hasil.
+
+Per acara (Admin → Acara, saat membuat atau mengedit):
+- **Filter kamera yang ditawarkan**: centang filter yang boleh dipilih tamu (kosong = semua). Bila hanya satu yang dicentang, deretan tombol disembunyikan dan filter itu langsung dipakai.
+- **Filter awal**: filter yang terpilih saat acara dibuka (mis. Hangat untuk pernikahan, Hitam Putih untuk acara klasik).
+
+Filter dihitung langsung di perangkat (tidak butuh internet) dan memakai rumus yang sama dengan CSS `filter`, sehingga hasil foto sama dengan yang terlihat di layar. Foto yang sudah masuk antrean offline tetap membawa filternya.
+
+## Layar tayang langsung (live wall)
+
+Halaman untuk TV atau proyektor di lokasi acara: foto tamu terbaru bergulir otomatis, dan **setiap foto baru muncul besar di tengah layar dengan tulisan "Foto baru!" dan konfeti**, lalu bergabung ke deretan.
+
+- **Cara membuka:** Admin → Acara → **Buka layar tayang** (atau **Salin tautan layar tayang**, lalu buka di browser TV/laptop). Alamatnya `https://situsmu/w/<token album>`; tokennya sama dengan tautan album penyelenggara, jadi hanya yang memegang tautan yang bisa melihat.
+- **Tampilannya** mengikuti acara: judul, baris kecil, teks sambutan (di bagian bawah), font judul, dan warna latar acara. Ada penghitung jumlah foto.
+- **Layar penuh:** ketuk atau klik halamannya sekali. Layar dijaga agar tidak mati, dan kursor disembunyikan.
+- **Pembaruan:** memeriksa foto baru tiap 6 detik. Titik kecil di pojok kanan bawah hijau bila tersambung dan merah bila terputus (foto terakhir tetap tampil).
+- Menampilkan 24 foto terbaru. Bila deretannya lebih lebar dari layar, deretan bergulir tanpa putus; bila sedikit, foto diam di tengah.
+- Foto yang masuk lewat antrean offline baru tampil setelah terunggah.
